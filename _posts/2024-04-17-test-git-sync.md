@@ -1,8 +1,9 @@
 ---
-title: 测试 Obsidian Git 自动同步
+title: "测试 Obsidian Git 自动同步"
 date: 2024-04-17 17:30:00 +0800
 categories: [测试]
 tags: [obsidian, git]
+description: 测试 Obsidian Git 插件的自动同步功能
 ---
 
 ## 这是一个测试文件
