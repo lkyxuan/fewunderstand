@@ -28,6 +28,8 @@ assets/js/dist
 
 # Obsidian
 .obsidian/
+workspace.json
+.smart-env/
 
 # System Files
 .DS_Store
