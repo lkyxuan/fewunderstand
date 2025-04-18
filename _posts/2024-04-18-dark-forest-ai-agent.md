@@ -1,16 +1,9 @@
 ---
 title: Dark Forest与AI代理人
 date: 2024-04-18 14:57:11 +0800
-categories:
-  - 知识科技
-tags:
-  - 区块链
-  - 游戏
-  - AI
+categories: [知识科技]
+tags: [区块链, 游戏, AI]
 description: 介绍Dark Forest游戏及其AI代理人SPUTNIK，涉及区块链技术和代币经济。
-category: 知识科技
-updated: 2025-04-19 00:09:06
-created: 2025-04-18
 ---
 ### 直接回答
 
