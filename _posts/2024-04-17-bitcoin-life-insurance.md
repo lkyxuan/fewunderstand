@@ -1,12 +1,14 @@
 ---
 title: 比特币寿险解析
 date: 2024-04-17 17:45:30 +0800
-categories: []
+categories: RWA
 tags:
+  - RWA
   - 比特币
   - 保险
   - 财富传承
-description: Meanwhile提供比特币计价的终身寿险，支持税收优化和资产传承。
+  - 税收优化
+description: Meanwhile提供比特币计价的终身寿险，支持财富传承和税收优化。
 ---
 ### 直接回答
 

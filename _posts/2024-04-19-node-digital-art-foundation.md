@@ -1,22 +1,12 @@
 ---
 tags:
-  - NFT项目与平台
-  - 社交应用
-  - SoFi
-  - 内容创作
-  - Publishing
-  - 投资机构
-  - VC
-  - 创始团队
-  - 核心开发者
+  - NFT
   - 数字艺术
-  - 区块链
-  - 艺术基金会
-  - 教育
-  - 保存
-categories:
-  - 🎮 4. 应用类（Web3 App & Consumer Crypto）
-description: NODE数字艺术基金会致力于通过创新和合作推动数字艺术的展示、教育和保存。
+  - VC支持
+  - 创始人
+  - 待研究
+categories: NFT
+description: NODE数字艺术基金会由Micky Malka发起，获2500万美元支持，旨在推动数字艺术的呈现、教育和保存。
 title: NODE艺术基金会
 ---
 ### 关键要点  

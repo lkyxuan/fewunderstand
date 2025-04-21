@@ -6,8 +6,7 @@ tags:
   - 打金
   - VC支持
   - 测试网
-categories:
-  - DeFi
+categories: DeFi
 description: Cork Protocol 通过 Depeg Swaps 管理稳定币和流动质押代币的去锚风险，获 a16z 等投资。
 title: Cork Protocol 解析
 updated: 2025-04-19 00:09:31

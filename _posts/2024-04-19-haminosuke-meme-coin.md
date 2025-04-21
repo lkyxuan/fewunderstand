@@ -11,9 +11,14 @@ tags:
   - SoFi
   - 社区驱动
   - 娱乐性项目
-categories: 未分类
-description: 研究基于仓鼠迷因的Solana链上加密货币Okintama Coin及其社区互动。
-title: 仓鼠迷因币研究
+  - meme
+  - 已研究
+  - solana
+  - 需验证
+  - 高优先级
+categories: Meme
+description: 研究基于仓鼠迷因的Solana链上Okintama Coin项目及其社区互动。
+title: Okintama迷因币研究
 ---
 ### 直接回答
 

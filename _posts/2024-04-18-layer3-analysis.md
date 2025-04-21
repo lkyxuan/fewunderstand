@@ -3,9 +3,14 @@ tags:
   - 区块链
   - 投资
   - 技术分析
-categories: 投资
-description: Layer3项目分析，探讨其技术特点、市场表现和投资价值
-title: Layer3项目分析
+  - 项目分析
+  - Layer3
+  - 空投设计
+  - 代币经济
+  - VC支持
+categories: Layer2
+description: 1kx投资Layer3的逻辑与潜力分析，聚焦用户聚合与链上参与优化
+title: Layer3投资逻辑分析
 updated: 2025-04-19 00:09:07
 created: 2025-04-19
 ---

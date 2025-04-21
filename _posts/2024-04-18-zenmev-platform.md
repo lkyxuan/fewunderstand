@@ -4,11 +4,15 @@ tags:
   - 区块链
   - 交易优化
   - DeFi
-  - Layer 1 公链
+  - Layer
+  - 公链
   - 人工智能
   - 质押
-categories: 未分类
-description: ZENMEV 是一个 AI 驱动的 DeFi 平台，通过 MEV 策略让用户质押资产获利。
+  - AI分析
+  - 高优先级
+  - 持续跟踪
+categories: DeFi
+description: ZENMEV 是一个 AI 驱动的 DeFi 平台，专注于 MEV 利润捕获和分配。
 title: ZENMEV 项目解析
 updated: 2025-04-19 00:09:25
 created: 2025-04-19

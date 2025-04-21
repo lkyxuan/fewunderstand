@@ -6,9 +6,12 @@ tags:
   - 社交应用
   - GameFi
   - 链游
-categories: 未分类
-description: Winny在NFT和Web3领域的贡献及项目参与情况
-title: Winny的Web3足迹
+  - 创始人
+  - 团队背景
+  - 项目分析
+categories: NFT
+description: Winny在NFT和Web3领域的角色与项目参与
+title: Winny NFT领域研究
 updated: 2025-04-19 00:10:07
 created: 2025-04-19
 ---
