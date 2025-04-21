@@ -3,8 +3,12 @@ tags:
   - 加密货币
   - 交易平台
   - 注意力经济
-categories: 知识科技
-description: Noise.xyz是基于加密货币项目注意力交易的创新平台，运行在MegaETH上，目前为邀请制。
+  - Layer 2 / Rollup
+  - 衍生品交易
+  - 预测市场
+  - 数据合作
+categories: 未分类
+description: Noise.xyz是基于项目注意力（mindshare）的衍生品交易平台，运行在MegaETH上。
 title: Noise.xyz平台解析
 updated: 2025-04-19 00:18:29
 created: 2025-04-18

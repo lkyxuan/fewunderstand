@@ -9,9 +9,11 @@ tags:
   - GameFi
   - 社交应用
   - SoFi
-categories: 🎮 4. 应用类（Web3 App & Consumer Crypto）
-description: 仓鼠迷因驱动的Solana娱乐项目Okintama Coin分析
-title: Okintama迷因币研究
+  - 社区驱动
+  - 娱乐性项目
+categories: 未分类
+description: 研究基于仓鼠迷因的Solana链上加密货币Okintama Coin及其社区互动。
+title: 仓鼠迷因币研究
 ---
 ### 直接回答
 
