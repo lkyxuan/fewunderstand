@@ -1,11 +1,15 @@
 ---
 tags:
-  - 区块链
-  - 协议
   - 技术分析
-categories: 知识科技
-description: Cork协议的技术特点和应用场景分析
-title: Cork协议分析
+  - DeFi
+  - 稳定币
+  - 打金
+  - VC支持
+  - 测试网
+categories:
+  - DeFi
+description: Cork Protocol 通过 Depeg Swaps 管理稳定币和流动质押代币的去锚风险，获 a16z 等投资。
+title: Cork Protocol 解析
 updated: 2025-04-19 00:09:31
 created: 2025-04-19
 ---
