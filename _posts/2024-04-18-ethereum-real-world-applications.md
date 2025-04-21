@@ -1,11 +1,15 @@
 ---
-title: 以太坊在现实世界中的应用
+title: 以太坊现实应用
 date: 2024-04-18 15:00:00 +0800
-categories: []
+categories: Ethereum生态
 tags:
   - 以太坊
-  - 数字身份
-description: 探讨以太坊生态系统在现实世界中的应用，特别是在新兴市场通过区块链技术解决实际问题。
+  - 已研究
+  - 持续跟踪
+  - 高优先级
+  - DeFi
+  - 身份绑定
+description: 以太坊通过数字身份解决新兴市场政府服务问题，吸引数百万用户。
 ---
 
 https://x.com/fede_intern/status/1912275773467062283

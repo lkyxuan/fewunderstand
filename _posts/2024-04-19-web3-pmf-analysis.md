@@ -1,12 +1,12 @@
 ---
 tags:
-  - web3
-  - DeFi
   - PMF
-  - Layer1
-  - 可持续性
-categories: []
-description: 探讨web3行业中产品-市场契合度（PMF）的意义、挑战及应对策略。
+  - 项目分析
+  - 创始人模式
+  - web3
+  - 投研笔记
+categories: 投研笔记
+description: 探讨web3行业中产品-市场契合度（PMF）的意义、挑战及创始人模式的解决方案。
 title: web3 PMF分析
 ---
 ### 直接回答
