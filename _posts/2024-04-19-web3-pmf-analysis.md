@@ -5,9 +5,13 @@ tags:
   - 创始人模式
   - 区块链
   - DeFi
-categories: 💰 3. 金融类（DeFi 赛道）
-description: 探讨web3行业中产品-市场契合度的意义、挑战及应对策略。
-title: web3的PMF挑战
+  - PMF
+  - Layer1
+  - 可持续性
+categories:
+  - 未分类
+description: 探讨web3行业中产品-市场契合度（PMF）的意义、挑战及应对策略。
+title: web3 PMF分析
 ---
 ### 直接回答
 
