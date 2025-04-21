@@ -3,10 +3,14 @@ tags:
   - 模块化区块链
   - 中继网络
   - 互操作协议
-  - 互操作协议
-categories: 
-description: INTELLECT-2是一个去中心化AI训练项目，专注于提升编码、数学和科学的推理能力。
-title: INTELLECT-2去中心化AI
+  - AI
+  - 去中心化
+  - 强化学习
+  - 待研究
+  - 高优先级
+categories: AI
+description: INTELLECT-2 是一个去中心化的 AI 训练项目，专注于编码、数学和科学的推理能力。
+title: INTELLECT-2 项目解析
 ---
 ### 直接回答
 

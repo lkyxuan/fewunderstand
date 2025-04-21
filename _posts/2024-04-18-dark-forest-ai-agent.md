@@ -1,12 +1,17 @@
 ---
-title: Dark Forest与AI代理人
+title: Dark Forest AI代理研究
 date: 2024-04-18 14:57:11 +0800
-categories: 知识科技
+categories: GameFi
 tags:
   - 区块链
   - 游戏
   - AI
-description: 介绍Dark Forest游戏及其AI代理人SPUTNIK，涉及区块链技术和代币经济。
+  - AI分析
+  - 交互教程
+  - gamefi
+  - zk
+  - 待研究
+description: Dark Forest游戏的AI代理人SPUTNIK开发及$DARK代币机制研究
 ---
 ### 直接回答
 
