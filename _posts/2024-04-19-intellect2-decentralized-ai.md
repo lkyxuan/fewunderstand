@@ -1,13 +1,19 @@
 ---
 tags:
-  - AI x Crypto 项目
+  - AI
+  - Crypto
+  - 项目
   - 去中心化存储
-  - 开发者工具 & 基础设施服务
+  - 开发者工具
+  - 基础设施服务
   - 模块化区块链
-  - 中继网络 / 互操作协议
-categories: 🎮 4. 应用类（Web3 App & Consumer Crypto）
-description: INTELLECT-2 是一个去中心化的 AI 训练项目，专注于编码、数学和科学的推理能力。
-title: INTELLECT-2 项目解析
+  - 中继网络
+  - 互操作协议
+  - 互操作协议
+categories:
+  - 🎮 4. 应用类（Web3 App & Consumer Crypto）
+description: INTELLECT-2是一个去中心化AI训练项目，专注于提升编码、数学和科学的推理能力。
+title: INTELLECT-2去中心化AI
 ---
 ### 直接回答
 

@@ -5,9 +5,10 @@ tags:
   - 区块链协议
   - 信誉系统
   - 链上投票
+  - DAO
 categories: 🧠 1. 基础架构层（Infrastructure Layer）
-description: Ethos平台slash机制事件分析及社区治理讨论
-title: Ethos治理事件分析
+description: Ethos平台上针对@jessepollak的slash尝试因未达共识失败，展示去中心化治理机制。
+title: Ethos治理事件解析
 ---
 ### Key Points
 - 这个 X 帖子似乎主要讨论了在 Ethos 平台上针对 @jessepollak 的一个“slash”尝试失败的事件。

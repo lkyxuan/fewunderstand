@@ -5,9 +5,13 @@ tags:
   - 加密货币
   - 社区互动
   - 娱乐项目
-categories: 💰 3. 金融类（DeFi 赛道）
-description: 基于仓鼠迷因的Solana链上娱乐性加密货币项目。
-title: 仓鼠迷因币调查
+  - meme-coin
+  - GameFi
+  - 社交应用
+  - SoFi
+categories: 🎮 4. 应用类（Web3 App & Consumer Crypto）
+description: 仓鼠迷因驱动的Solana娱乐项目Okintama Coin分析
+title: Okintama迷因币研究
 ---
 ### 直接回答
 

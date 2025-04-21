@@ -1,13 +1,21 @@
 ---
 tags:
   - 身份系统
-  - AI x Crypto 项目
-  - 开发者工具 & 基础设施服务
+  - AI
+  - x
+  - Crypto
+  - 项目
+  - 开发者工具
+  - 基础设施服务
   - 金融类
-  - 人 & 机构
-categories: 💻 2. 开发者工具 & 基础设施服务（Infra Services）
-description: Plastic Labs 的 Honcho 平台通过 AI 和加密技术构建个性化用户身份层。
-title: Honcho：AI 身份层
+  - 人
+  - 机构
+  - 去中心化存储
+  - 互操作协议
+categories:
+  - 💻 2. 开发者工具 & 基础设施服务（Infra Services）
+description: Plastic Labs推出AI个性化平台Honcho，通过加密技术构建共享数据层，增强用户数据所有权和隐私。
+title: Honcho：AI身份个性化平台
 ---
 ### 直接回答
 

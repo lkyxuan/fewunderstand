@@ -1,12 +1,22 @@
 ---
 tags:
   - NFT项目与平台
-  - 社交应用 / SoFi
-  - 内容创作 / Publishing
-  - 投资机构 / VC
-  - 创始团队 / 核心开发者
-categories: 🎮 4. 应用类（Web3 App & Consumer Crypto）
-description: NODE数字艺术基金会致力于推动数字艺术的展示、教育与保存。
+  - 社交应用
+  - SoFi
+  - 内容创作
+  - Publishing
+  - 投资机构
+  - VC
+  - 创始团队
+  - 核心开发者
+  - 数字艺术
+  - 区块链
+  - 艺术基金会
+  - 教育
+  - 保存
+categories:
+  - 🎮 4. 应用类（Web3 App & Consumer Crypto）
+description: NODE数字艺术基金会致力于通过创新和合作推动数字艺术的展示、教育和保存。
 title: NODE艺术基金会
 ---
 ### 关键要点  
