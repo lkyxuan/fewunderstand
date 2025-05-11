@@ -3,14 +3,17 @@ title: "Thread by @satlayer"
 source: "https://x.com/satlayer/status/1920841556661334297"
 author:
   - "[[@satlayer]]"
-published: 2025-05-09
+published: 2025-05-11
 created: 2025-05-11
 description:
 tags:
-  - "#Bitcoin"
-  - "#Crypto"
-  - "#Airdrop"
+  - "Bitcoin"
+  - "Crypto"
+  - "Airdrop"
 ---
+
+## 原文
+
 **SatLayer** @satlayer [2025-05-09](https://x.com/satlayer/status/1920841556661334297)
 
 BTC hit 104K — you know we had to drop something big.
@@ -21,17 +24,18 @@ SatLayer is locking up to ✨ 0.75% ✨ of token supply for the @KaitoAI fam!
 
 → Additional 25bps earmarked for the broader Kaito fam — stakers, holders & builders
 
-Here’s how you can take part👇  
-  
-\-----------谷歌翻译-----------  
-  
-BTC命中104K - 您知道我们必须放弃一些大东西。  
-  
-Satlayer锁定了多达0.75％的令牌供应  
-@kaitoai  
-fam！  
-  
-→50bps为Yap +完整赏金的卫星赛车备份  
-→为更广泛的Kaito Fam推出了额外的25bps -Stakers，持有者和建筑商  
-  
-这是您可以参加的方式
+Here's how you can take part👇
+
+## 翻译
+
+**SatLayer** @satlayer [2025-05-09](https://x.com/satlayer/status/1920841556661334297)
+
+BTC 突破 104K — 你知道我们必须发布一些重磅消息。
+
+SatLayer 将为 @KaitoAI 社区锁定高达 ✨ 0.75% ✨ 的代币供应量！
+
+→ 50个基点（0.5%）预留给 SatLayer 的活跃用户，用于完成赏金任务
+
+→ 额外的 25个基点（0.25%）预留给更广泛的 Kaito 社区 — 包括质押者、持有者和建设者
+
+以下是参与方式👇
