@@ -1,15 +1,14 @@
 ---
 title: "Thread by @satlayer"
-source: "https://x.com/satlayer/status/1920841556661334297"
-author:
-  - "[[@satlayer]]"
-published: 2025-05-11
-created: 2025-05-11
-description:
+date: 2025-05-11 14:00:00 +0800
+categories: 加密货币
 tags:
-  - "Bitcoin"
-  - "Crypto"
-  - "Airdrop"
+  - Bitcoin
+  - Crypto
+  - Airdrop
+description: SatLayer 为 @KaitoAI 社区锁定代币供应量的公告
+updated: 2025-05-11
+created: 2025-05-11
 ---
 
 ## 原文
