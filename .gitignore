@@ -3,6 +3,13 @@
 vendor
 Gemfile.lock
 
+# Python build files
+build/
+dist/
+*.pyc
+__pycache__/
+*.egg-info/
+
 # Jekyll cache
 .jekyll-cache
 .jekyll-metadata
