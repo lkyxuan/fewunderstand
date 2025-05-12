@@ -24,8 +24,14 @@ def git_init():
 def git_commit_and_push():
     """提交更改并推送到GitHub"""
     try:
-        # 添加所有更改
-        subprocess.run(["git", "add", "."], check=True)
+        # 只添加 _posts 目录的更改
+        subprocess.run(["git", "add", "_posts/"], check=True)
+        
+        # 检查是否有更改需要提交
+        result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, check=True)
+        if not result.stdout.strip():
+            print("没有文件需要提交")
+            return
         
         # 提交更改
         commit_message = f"自动同步更新 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
