@@ -1,11 +1,10 @@
 ---
 title: "Thread by @0xasimov"
 source: "https://x.com/0xasimov/status/1920587169728430093"
-author:
-  - "[[@0xasimov]]"
-published: 2025-05-09
+author: "Few Understand"
+published: true
 date: "2025-05-12 10:56:19 +0800"
-description:
+description: "一份关于 Kami rolls 的详细指南，包括类型匹配、统计数据分布、构建路径和元理论等内容。"
 tags:
   - "game guide"
   - "strategy"
