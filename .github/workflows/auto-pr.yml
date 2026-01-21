@@ -77,32 +77,29 @@ jobs:
             PR_PREFIX="Update"
           fi
 
-          # 提取分支名称中的描述部分
+          # 提取分支名称中的描述部分并转为标题格式
           BRANCH_DESC=$(echo "$BRANCH_NAME" | sed 's|^[^_/]*[_/]||; s|^[0-9]*-||' | tr '-' ' ' | tr '_' ' ')
-          # 首字母大写
-          BRANCH_DESC="$(echo "$BRANCH_DESC" | sed 's/\b\(.\)/\u\1/g')"
+          # 首字母大写 (兼容 GNU/BSD sed)
+          BRANCH_DESC=$(echo "$BRANCH_DESC" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')
 
           # 创建 PR
+          BODY="🤖 Auto-generated PR for branch \`$BRANCH_NAME\`
+
+          Target: \`$BASE_BRANCH\`
+
+          ---
+
+          ## Checklist
+
+          - [ ] Tests pass
+          - [ ] Documentation updated (if needed)
+          - [ ] Code follows project style"
+
           gh pr create \
             --base "$BASE_BRANCH" \
             --head "$BRANCH_NAME" \
             --title "$PR_PREFIX: $BRANCH_DESC" \
-            --body "$(cat <<EOF
-## Summary
-
-Auto-generated PR for branch \`$BRANCH_NAME\`
-
-## Changes
-
-<!-- Describe your changes here -->
-
-## Checklist
-
-- [ ] Tests pass
-- [ ] Documentation updated (if needed)
-- [ ] Code follows project style
-EOF
-)" \
+            --body "$BODY" \
             || echo "Failed to create PR"
 
           echo "PR created successfully!"
