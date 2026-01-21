@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker compose exec -T postgres pg_isready; do sleep 2; done'
+          echo "Waiting for Hasura..."
+          timeout 60 bash -c 'until curl -s http://localhost:8080/healthz | grep -q OK; do sleep 2; done'
+          echo "All services are healthy!"
+
+      - name: Run health check
+        run: ./scripts/health-check.sh
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest requests psycopg2-binary
+
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ -v
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose
+        run: docker compose config --quiet
+
+      - name: Check shell scripts
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck scripts/*.sh || true
