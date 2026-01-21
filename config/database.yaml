@@ -222,12 +222,12 @@ tables:
     hypertable: true
     retention_policy: true
     partition_column: time
-    primary_key: [time, window, word]
+    primary_key: [time, time_window, word]
     columns:
       time:
         type: TIMESTAMPTZ
         nullable: false
-      window:
+      time_window:
         type: VARCHAR(20)
         nullable: false
       word:
@@ -241,7 +241,7 @@ tables:
         nullable: true
         references: news(id)
     indexes:
-      - columns: [window, count]
+      - columns: [time_window, count]
         order: DESC
 
 # ============================================

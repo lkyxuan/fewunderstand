@@ -101,14 +101,14 @@ COMMENT ON TABLE news IS '爬取的新闻文章';
 -- ============================================
 CREATE TABLE IF NOT EXISTS word_freq (
     time TIMESTAMPTZ NOT NULL,
-    window VARCHAR(20) NOT NULL,
+    time_window VARCHAR(20) NOT NULL,
     word VARCHAR(100) NOT NULL,
     count INTEGER NOT NULL,
     latest_news_id BIGINT REFERENCES news(id),
-    PRIMARY KEY (time, window, word)
+    PRIMARY KEY (time, time_window, word)
 );
 
-CREATE INDEX IF NOT EXISTS idx_word_freq_window_count ON word_freq (window, count DESC);
+CREATE INDEX IF NOT EXISTS idx_word_freq_window_count ON word_freq (time_window, count DESC);
 
 COMMENT ON TABLE word_freq IS '新闻词频聚合结果';
 
