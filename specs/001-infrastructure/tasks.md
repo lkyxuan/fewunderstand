@@ -19,18 +19,18 @@
 
 **Purpose**: 创建基础目录结构和配置文件
 
-- [ ] T001 创建项目目录结构：db/init/, db/migrations/, hasura/metadata/, scripts/, tests/integration/, .github/
-- [ ] T002 [P] 创建环境变量模板文件 .env.example
-- [ ] T003 [P] 创建 .gitignore 文件，忽略 .env 和 Docker volumes
+- [x] T001 创建项目目录结构：db/init/, db/migrations/, hasura/metadata/, scripts/, tests/integration/, .github/
+- [x] T002 [P] 创建运行时配置文件 config/settings.yaml (替代 .env.example)
+- [x] T003 [P] 创建 .gitignore 文件，忽略 .env 和 Docker volumes
 
 ### GitHub 自动化
 
-- [ ] T004 [P] 创建 CI 工作流 .github/workflows/ci.yml (push 时运行测试)
-- [ ] T005 [P] 创建 Docker 构建工作流 .github/workflows/docker.yml (构建并推送镜像)
-- [ ] T006 [P] 创建 Bug Report 模板 .github/ISSUE_TEMPLATE/bug_report.md
-- [ ] T007 [P] 创建 Feature Request 模板 .github/ISSUE_TEMPLATE/feature_request.md
-- [ ] T008 [P] 创建 PR 模板 .github/PULL_REQUEST_TEMPLATE.md
-- [ ] T009 [P] 创建 Release 工作流 .github/workflows/release.yml (tag 时自动发布)
+- [x] T004 [P] 创建 CI 工作流 .github/workflows/ci.yml (push 时运行测试)
+- [x] T005 [P] 创建 Docker 构建工作流 .github/workflows/docker.yml (构建并推送镜像)
+- [x] T006 [P] 创建 Bug Report 模板 .github/ISSUE_TEMPLATE/bug_report.md
+- [x] T007 [P] 创建 Feature Request 模板 .github/ISSUE_TEMPLATE/feature_request.md
+- [x] T008 [P] 创建 PR 模板 .github/PULL_REQUEST_TEMPLATE.md
+- [x] T009 [P] 创建 Release 工作流 .github/workflows/release.yml (tag 时自动发布)
 
 **Checkpoint**: 目录结构就绪，GitHub Actions 配置完成
 
@@ -42,12 +42,13 @@
 
 **⚠️ CRITICAL**: 此阶段必须完成后才能开始用户故事
 
-- [ ] T010 创建 docker-compose.yml，定义 postgres 和 hasura 服务
-- [ ] T011 配置 PostgreSQL 服务：使用 timescale/timescaledb:latest-pg15 镜像
-- [ ] T012 配置 Hasura 服务：使用 hasura/graphql-engine:v2.36.0 镜像
-- [ ] T013 配置服务依赖：hasura depends_on postgres (condition: service_healthy)
-- [ ] T014 配置 Docker volumes 用于数据持久化
-- [ ] T015 配置服务健康检查 (healthcheck)
+- [x] T010 创建 docker-compose.yml，定义 postgres 和 hasura 服务
+- [x] T011 配置 PostgreSQL 服务：使用 timescale/timescaledb:2.14.2-pg15 镜像
+- [x] T012 配置 Hasura 服务：使用 hasura/graphql-engine:v2.36.0 镜像
+- [x] T013 配置服务依赖：hasura depends_on postgres (condition: service_healthy)
+- [x] T014 配置 Docker volumes 用于数据持久化
+- [x] T015 配置服务健康检查 (healthcheck)
+- [x] T015b 配置端口仅绑定到 localhost (127.0.0.1)，符合 FR-012 安全要求
 
 **Checkpoint**: docker-compose.yml 完成，可以 `docker compose config` 验证
 
@@ -61,16 +62,16 @@
 
 ### Implementation for US1
 
-- [ ] T016 [US1] 创建数据库初始化脚本 db/init/00_init.sql (启用 TimescaleDB 扩展)
-- [ ] T017 [US1] 创建启动脚本 scripts/start.sh
-- [ ] T018 [US1] 创建停止脚本 scripts/stop.sh
-- [ ] T019 [US1] 创建健康检查脚本 scripts/health-check.sh
-- [ ] T020 [US1] 创建升级迁移脚本 scripts/migrate.sh (按序执行 db/migrations/*.sql)
-- [ ] T021 [US1] 配置 Hasura Console 访问 (HASURA_GRAPHQL_ENABLE_CONSOLE=true)
+- [x] T016 [US1] 创建数据库初始化脚本 db/init/00_init.sql (启用 TimescaleDB 扩展)
+- [x] T017 [US1] 创建启动脚本 scripts/start.sh
+- [x] T018 [US1] 创建停止脚本 scripts/stop.sh
+- [x] T019 [US1] 创建健康检查脚本 scripts/health-check.sh
+- [x] T020 [US1] 创建升级迁移脚本 scripts/migrate.sh (按序执行 db/migrations/*.sql)
+- [x] T021 [US1] 配置 Hasura Console 访问 (HASURA_GRAPHQL_ENABLE_CONSOLE=true)
 
 ### Tests for US1
 
-- [ ] T022 [US1] 创建集成测试 tests/integration/test_startup.py (验证服务启动)
+- [x] T022 [US1] 创建集成测试 tests/integration/test_startup.py (验证服务启动)
 
 **Checkpoint**: `./scripts/start.sh` 可成功启动所有服务，`./scripts/health-check.sh` 显示全部 healthy
 
@@ -84,13 +85,13 @@
 
 ### Implementation for US2
 
-- [ ] T023 [US2] 创建数据库初始化脚本 db/init/001_extensions.sql (启用 TimescaleDB 扩展)
-- [ ] T024 [US2] 创建表结构脚本 db/init/002_tables.sql (所有 6 张表 + 索引)
-- [ ] T025 [US2] 配置 Docker 挂载 db/init/ 目录到 postgres 容器的 /docker-entrypoint-initdb.d/
+- [x] T023 [US2] 确认数据库初始化脚本 db/init/00_init.sql 已创建 (与 T016 共享)
+- [x] T024 [US2] 创建表结构脚本 db/init/01_tables.sql (所有 6 张表 + 索引)
+- [x] T025 [US2] 配置 Docker 挂载 db/init/ 目录到 postgres 容器的 /docker-entrypoint-initdb.d/
 
 ### Tests for US2
 
-- [ ] T026 [US2] 创建集成测试 tests/integration/test_database.py (验证表创建和数据写入)
+- [x] T026 [US2] 创建集成测试 tests/integration/test_database.py (验证表创建和数据写入)
 
 **Checkpoint**: 可以通过 psql 连接并向各表插入数据
 
@@ -104,15 +105,15 @@
 
 ### Implementation for US3
 
-- [ ] T027 [US3] 创建 Hasura 配置文件 hasura/config.yaml
-- [ ] T028 [US3] 配置 Hasura 元数据目录结构 hasura/metadata/
-- [ ] T029 [US3] 创建数据库连接配置 hasura/metadata/databases/databases.yaml
-- [ ] T030 [US3] 配置表跟踪 (track tables) hasura/metadata/databases/default/tables/
-- [ ] T031 [US3] 配置 Hasura 使用元数据目录 (通过环境变量或 CLI)
+- [x] T027 [US3] 创建 Hasura 配置文件 hasura/config.yaml
+- [x] T028 [US3] 配置 Hasura 元数据目录结构 hasura/metadata/
+- [x] T029 [US3] 创建数据库连接配置 hasura/metadata/databases/databases.yaml
+- [x] T030 [US3] 配置表跟踪 (track tables) hasura/metadata/databases/default/tables/
+- [x] T031 [US3] 配置 Hasura 使用元数据目录 (通过环境变量或 CLI)
 
 ### Tests for US3
 
-- [ ] T032 [US3] 创建集成测试 tests/integration/test_graphql.py (验证查询和订阅)
+- [x] T032 [US3] 创建集成测试 tests/integration/test_graphql.py (验证查询和订阅)
 
 **Checkpoint**: 在 http://localhost:8080 的 GraphQL Playground 可以查询数据
 
@@ -126,12 +127,12 @@
 
 ### Implementation for US4
 
-- [ ] T033 [US4] 创建 hypertable 和保留策略脚本 db/init/003_timescale.sql
-- [ ] T034 [US4] 配置保留天数环境变量 RETENTION_DAYS 在 .env.example
+- [x] T033 [US4] 创建 hypertable 和保留策略脚本 db/init/02_timescale.sql
+- [x] T034 [US4] 配置保留天数 retention.days 在 config/settings.yaml
 
 ### Tests for US4
 
-- [ ] T035 [US4] 创建集成测试 tests/integration/test_timescale.py (验证 hypertable 和保留策略)
+- [x] T035 [US4] 创建集成测试 tests/integration/test_timescale.py (验证 hypertable 和保留策略)
 
 **Checkpoint**: 数据保留策略配置完成，可通过 SQL 查询验证
 
@@ -141,8 +142,8 @@
 
 **Purpose**: 完善文档和最终验证
 
-- [ ] T036 [P] 更新 README.md 添加快速开始说明
-- [ ] T037 [P] 创建 CONTRIBUTING.md 开发者指南
+- [x] T036 [P] 更新 README.md 添加快速开始说明
+- [x] T037 [P] 创建 CONTRIBUTING.md 开发者指南
 - [ ] T038 验证 quickstart.md 步骤可正常执行
 - [ ] T039 运行所有集成测试确保通过
 
@@ -188,7 +189,7 @@ Phase 2 (Foundational)
 ### Parallel Opportunities
 
 - Phase 1 中的 T002, T003 可并行
-- Phase 4 中的迁移脚本 T016-T022 可并行编写
+- Phase 3 中的 US1 脚本 T017-T021 可并行编写
 - Phase 7 中的 T036, T037 可并行
 
 ---

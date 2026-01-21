@@ -1,0 +1,85 @@
+# services.yaml
+# Service configuration for Docker Compose
+# Defines all service parameters that can be customized
+
+# ============================================
+# PostgreSQL + TimescaleDB
+# ============================================
+postgres:
+  image: timescale/timescaledb:2.14.2-pg15
+  container_name: lagos-postgres
+  ports:
+    internal: 5432
+    external: "${POSTGRES_PORT:-5432}"
+    bind: "127.0.0.1"  # FR-012: 仅绑定到 localhost，避免对外暴露
+  environment:
+    POSTGRES_USER: "${POSTGRES_USER:-lagos}"
+    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-lagos_dev_password}"
+    POSTGRES_DB: "${POSTGRES_DB:-lagos}"
+  volumes:
+    - name: postgres_data
+      path: /var/lib/postgresql/data
+    - source: ./db/init
+      target: /docker-entrypoint-initdb.d
+      readonly: true
+    - source: ./db/migrations
+      target: /migrations
+      readonly: true
+  healthcheck:
+    test: "pg_isready -U ${POSTGRES_USER:-lagos} -d ${POSTGRES_DB:-lagos}"
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+  resources:
+    memory_limit: 2G
+    memory_reservation: 512M
+
+# ============================================
+# Hasura GraphQL Engine
+# ============================================
+hasura:
+  image: hasura/graphql-engine:v2.36.0
+  container_name: lagos-hasura
+  depends_on:
+    - postgres
+  ports:
+    internal: 8080
+    external: "${HASURA_PORT:-8080}"
+    bind: "127.0.0.1"  # FR-012: 仅绑定到 localhost，避免对外暴露
+  environment:
+    HASURA_GRAPHQL_DATABASE_URL: "${HASURA_GRAPHQL_DATABASE_URL:-postgres://lagos:lagos_dev_password@postgres:5432/lagos}"
+    HASURA_GRAPHQL_ADMIN_SECRET: "${HASURA_GRAPHQL_ADMIN_SECRET:-lagos_admin_secret}"
+    HASURA_GRAPHQL_ENABLE_CONSOLE: "${HASURA_GRAPHQL_ENABLE_CONSOLE:-true}"
+    HASURA_GRAPHQL_DEV_MODE: "${HASURA_GRAPHQL_DEV_MODE:-true}"
+    HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup, http-log, webhook-log, websocket-log, query-log"
+    HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
+  volumes:
+    - source: ./hasura/metadata
+      target: /hasura-metadata
+      readonly: true
+  healthcheck:
+    test: "wget -q -O - http://localhost:8080/healthz || exit 1"
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+  resources:
+    memory_limit: 1G
+    memory_reservation: 256M
+
+# ============================================
+# Named Volumes
+# ============================================
+volumes:
+  postgres_data:
+    description: "PostgreSQL data persistence"
+    driver: local
+
+# ============================================
+# Networks (optional, for future expansion)
+# ============================================
+networks:
+  default:
+    name: lagos-network
+    driver: bridge

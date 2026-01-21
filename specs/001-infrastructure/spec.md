@@ -90,8 +90,9 @@
 - **FR-007**: 系统 MUST 支持配置数据保留期限（7-30 天可配置）
 - **FR-008**: 系统 MUST 自动清理超过保留期限的数据
 - **FR-009**: 系统 MUST 提供健康检查端点，报告各服务状态
-- **FR-010**: 系统 MUST 支持跨平台运行（Windows/Mac/Linux）
+- **FR-010**: 系统 MUST 支持跨平台运行（Windows/Mac/Linux），至少提供 `docker compose up -d` 的一键启动路径
 - **FR-011**: 系统 MUST 使用环境变量管理配置，不硬编码敏感信息
+- **FR-012**: 系统 MUST 默认仅绑定到 localhost（127.0.0.1），避免对外暴露管理端口
 
 ### Key Entities
 

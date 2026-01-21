@@ -75,7 +75,7 @@
 
 **Primary Key**: (time, symbol)
 **Hypertable Partition**: time (按天分区)
-**Retention Policy**: 覆盖模式 (只保留最新)
+**Retention Policy**: 可配置 (默认 30 天)
 
 ---
 
@@ -132,7 +132,7 @@
 | latest_news_id | BIGINT | REFERENCES news(id) | 最新相关新闻 |
 
 **Primary Key**: (time, window, word)
-**Retention Policy**: 覆盖模式 (每个窗口只保留最新统计)
+**Retention Policy**: 可配置 (默认 30 天)
 
 ---
 
@@ -180,6 +180,7 @@ SELECT create_hypertable('klines', 'time');
 SELECT create_hypertable('indicators', 'time');
 SELECT create_hypertable('signals', 'time');
 SELECT create_hypertable('news', 'time');
+SELECT create_hypertable('word_freq', 'time');
 ```
 
 ### Retention Policies
@@ -188,8 +189,10 @@ SELECT create_hypertable('news', 'time');
 -- 可配置保留期限
 SELECT add_retention_policy('prices', INTERVAL '30 days');
 SELECT add_retention_policy('klines', INTERVAL '30 days');
+SELECT add_retention_policy('indicators', INTERVAL '30 days');
 SELECT add_retention_policy('signals', INTERVAL '30 days');
 SELECT add_retention_policy('news', INTERVAL '30 days');
+SELECT add_retention_policy('word_freq', INTERVAL '30 days');
 ```
 
 ### Continuous Aggregates (可选优化)

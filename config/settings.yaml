@@ -1,0 +1,28 @@
+# settings.yaml
+# Runtime configuration for Lagos
+# Edit this file to customize your local environment
+# Start script will generate .env from this file
+
+# ============================================
+# Database
+# ============================================
+database:
+  user: lagos
+  password: lagos_dev_password
+  name: lagos
+  port: 5432
+
+# ============================================
+# Hasura GraphQL Engine
+# ============================================
+hasura:
+  port: 8080
+  admin_secret: lagos_admin_secret
+  enable_console: true
+  dev_mode: true
+
+# ============================================
+# Data Retention
+# ============================================
+retention:
+  days: 30  # Data older than this will be automatically deleted

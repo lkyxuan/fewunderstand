@@ -52,15 +52,22 @@ specs/001-infrastructure/
 ```text
 # Infrastructure configuration
 docker-compose.yml           # 服务编排定义
-.env.example                 # 环境变量模板
-.env                         # 本地环境变量 (gitignored)
+.env                         # 自动生成 (gitignored，由 config/settings.yaml 生成)
+
+# Centralized Configuration (配置优先原则)
+config/
+├── README.md                # 配置目录说明
+├── settings.yaml            # 运行时配置 (用户编辑此文件)
+├── database.yaml            # 数据库 Schema 定义 (表结构、字段、约束、索引)
+├── services.yaml            # Docker 服务配置 (镜像、端口、资源限制)
+└── scripts.yaml             # 脚本行为配置 (超时、重试、健康检查)
 
 # Database
 db/
 ├── init/                    # 首次安装时执行 (挂载到 /docker-entrypoint-initdb.d/)
-│   ├── 001_extensions.sql   # 启用 TimescaleDB 扩展
-│   ├── 002_tables.sql       # 创建所有表 + 索引
-│   └── 003_timescale.sql    # hypertable + 保留策略
+│   ├── 00_init.sql          # 启用 TimescaleDB 扩展
+│   ├── 01_tables.sql        # 创建所有表 + 索引
+│   └── 02_timescale.sql     # hypertable + 保留策略
 └── migrations/              # 版本升级时执行 (幂等脚本)
     └── .gitkeep             # 初始为空，后续版本添加
 
@@ -76,15 +83,19 @@ hasura/
 scripts/
 ├── start.sh                 # 启动脚本
 ├── stop.sh                  # 停止脚本
-└── health-check.sh          # 健康检查脚本
+├── health-check.sh          # 健康检查脚本
+└── migrate.sh               # 升级迁移脚本
 
 # Tests
 tests/
 └── integration/
-    └── test_infrastructure.py   # 基础架构集成测试
+    ├── test_startup.py      # US1: 服务启动测试
+    ├── test_database.py     # US2: 数据库写入测试
+    ├── test_graphql.py      # US3: GraphQL API 测试
+    └── test_timescale.py    # US4: 时序数据优化测试
 ```
 
-**Structure Decision**: 采用 Infrastructure 配置结构。数据库迁移放在 `db/migrations/`，Hasura 配置放在 `hasura/`，便于独立管理。启动/停止脚本放在 `scripts/` 方便跨平台使用。
+**Structure Decision**: 采用 Infrastructure 配置结构。**配置优先原则**：所有可配置项集中在 `config/` 目录，便于 AI 开发和模块化管理。数据库迁移放在 `db/migrations/`，Hasura 配置放在 `hasura/`，便于独立管理。启动/停止脚本放在 `scripts/` 方便跨平台使用。
 
 ## Complexity Tracking
 

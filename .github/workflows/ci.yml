@@ -20,9 +20,29 @@ jobs:
       - name: Wait for services to be healthy
         run: |
           echo "Waiting for PostgreSQL..."
-          timeout 60 bash -c 'until docker compose exec -T postgres pg_isready; do sleep 2; done'
+          timeout 60 bash -c 'until docker compose exec -T postgres pg_isready -U lagos -d lagos; do sleep 2; done'
+          echo "Checking postgres logs..."
+          docker compose logs postgres 2>&1 | tail -50
+          echo "Waiting for database initialization..."
+          timeout 120 bash -c 'until docker compose exec -T postgres psql -U lagos -d lagos -c "SELECT 1 FROM _config LIMIT 1" 2>/dev/null; do sleep 5; done' || {
+            echo "Database init failed, showing logs:"
+            docker compose logs postgres 2>&1 | tail -100
+            exit 1
+          }
           echo "Waiting for Hasura..."
           timeout 60 bash -c 'until curl -s http://localhost:8080/healthz | grep -q OK; do sleep 2; done'
+          echo "Tracking tables in Hasura..."
+          for table in prices klines indicators signals news word_freq; do
+            curl -s -X POST http://localhost:8080/v1/metadata \
+              -H "x-hasura-admin-secret: lagos_admin_secret" \
+              -H "Content-Type: application/json" \
+              -d "{\"type\": \"pg_track_table\", \"args\": {\"source\": \"default\", \"table\": {\"schema\": \"public\", \"name\": \"$table\"}}}" > /dev/null
+          done
+          echo "Reloading Hasura metadata..."
+          curl -s -X POST http://localhost:8080/v1/metadata \
+            -H "x-hasura-admin-secret: lagos_admin_secret" \
+            -H "Content-Type: application/json" \
+            -d '{"type": "reload_metadata", "args": {}}' | grep -q '"is_consistent":true' || echo "Metadata reload warning"
           echo "All services are healthy!"
 
       - name: Run health check
