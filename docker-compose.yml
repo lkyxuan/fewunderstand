@@ -23,8 +23,7 @@ services:
     image: hasura/graphql-engine:v2.36.0
     container_name: lagos-hasura
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     environment:
       HASURA_GRAPHQL_DATABASE_URL: ${HASURA_GRAPHQL_DATABASE_URL:-postgres://lagos:lagos_dev_password@postgres:5432/lagos}
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-lagos_admin_secret}
