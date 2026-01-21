@@ -1,0 +1,42 @@
+# Environment (auto-generated from config/settings.yaml)
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Build
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/

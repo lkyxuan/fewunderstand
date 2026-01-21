@@ -1,0 +1,61 @@
+name: Sync Main to Dev
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync main to dev
+        run: |
+          # 检查 dev 分支是否存在
+          if ! git ls-remote --heads origin dev | grep -q dev; then
+            echo "dev branch does not exist. Creating it from main..."
+            git checkout -b dev
+            git push origin dev
+            exit 0
+          fi
+
+          # 切换到 dev 分支
+          git checkout dev
+          git pull origin dev
+
+          # 合并 main 到 dev
+          if git merge origin/main --no-edit; then
+            git push origin dev
+            echo "Successfully synced main to dev"
+          else
+            echo "Merge conflict detected. Creating PR instead..."
+            # 如果有冲突，创建 PR 让人工处理
+            git merge --abort
+
+            # 创建临时分支
+            SYNC_BRANCH="sync/main-to-dev-$(date +%Y%m%d%H%M%S)"
+            git checkout -b "$SYNC_BRANCH" origin/main
+            git push origin "$SYNC_BRANCH"
+
+            # 使用 gh 创建 PR
+            gh pr create \
+              --base dev \
+              --head "$SYNC_BRANCH" \
+              --title "Sync: main → dev (需要人工合并)" \
+              --body "自动同步 main 到 dev 时发现冲突，需要人工解决。"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
