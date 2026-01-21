@@ -3,12 +3,8 @@
 -- Configuration is loaded from environment variables
 
 -- ============================================
--- Load configuration from environment
+-- Create database tables
 -- ============================================
-\set ON_ERROR_STOP on
-
--- Get retention days from environment (default: 30)
-SELECT COALESCE(current_setting('app.retention_days', TRUE), '30')::INTEGER AS retention_days \gset
 
 -- ============================================
 -- Table: prices (价格数据)
@@ -66,13 +62,14 @@ COMMENT ON TABLE indicators IS '计算后的技术指标';
 -- Table: signals (信号数据)
 -- ============================================
 CREATE TABLE IF NOT EXISTS signals (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGSERIAL,
     time TIMESTAMPTZ NOT NULL,
     symbol VARCHAR(20) NOT NULL,
     signal_type VARCHAR(50) NOT NULL,
     change_pct DECIMAL(10,4),
     price DECIMAL(20,8),
-    metadata JSONB
+    metadata JSONB,
+    PRIMARY KEY (time, id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_signals_time ON signals (time DESC);
@@ -84,13 +81,14 @@ COMMENT ON TABLE signals IS '触发的交易信号';
 -- Table: news (新闻数据)
 -- ============================================
 CREATE TABLE IF NOT EXISTS news (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGSERIAL,
     time TIMESTAMPTZ NOT NULL,
     source VARCHAR(50) NOT NULL,
     title TEXT NOT NULL,
     url TEXT UNIQUE,
     content TEXT,
-    crawled_at TIMESTAMPTZ DEFAULT NOW()
+    crawled_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (time, id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_news_time ON news (time DESC);
