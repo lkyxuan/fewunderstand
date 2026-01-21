@@ -1,0 +1,22 @@
+- table:
+    name: prices
+    schema: public
+- table:
+    name: klines
+    schema: public
+- table:
+    name: indicators
+    schema: public
+- table:
+    name: signals
+    schema: public
+- table:
+    name: news
+    schema: public
+- table:
+    name: word_freq
+    schema: public
+  object_relationships:
+    - name: latest_news
+      using:
+        foreign_key_constraint_on: latest_news_id

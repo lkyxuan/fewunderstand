@@ -33,11 +33,15 @@ git clone <repository-url> lagos
 cd lagos
 ```
 
-### 2. 配置环境变量
+### 2. 配置 (可选)
 
-```bash
-cp .env.example .env
-# 编辑 .env 设置密码 (可选，有默认值)
+默认配置即可使用。如需自定义，编辑 `config/settings.yaml`:
+
+```yaml
+database:
+  port: 5432      # 修改数据库端口
+retention:
+  days: 7         # 修改数据保留天数
 ```
 
 ### 3. 启动服务
@@ -45,6 +49,11 @@ cp .env.example .env
 ```bash
 ./scripts/start.sh
 # 或
+docker compose up -d
+```
+
+**Windows (PowerShell)**:
+```powershell
 docker compose up -d
 ```
 
@@ -88,6 +97,11 @@ query HealthCheck {
 docker compose down
 ```
 
+**Windows (PowerShell)**:
+```powershell
+docker compose down
+```
+
 数据会保留在 Docker volumes 中。
 
 ## 完全清理
@@ -97,6 +111,8 @@ docker compose down
 ```bash
 docker compose down -v
 ```
+
+> 警告：`-v` 会删除所有本地数据卷，重启后数据将无法恢复。
 
 ## 常见问题
 
@@ -110,8 +126,12 @@ Error: port 5432 is already in use
 ```bash
 # 查找占用端口的进程
 lsof -i :5432
-# 或修改 .env 中的端口映射
+# 或修改 config/settings.yaml 中的端口
 ```
+
+### 仅限本地访问
+
+服务默认绑定到 localhost（127.0.0.1），仅本机可访问，**本地使用无需修改默认密码**。如需对外网暴露，需自行修改 docker-compose.yml 的端口绑定。
 
 ### 内存不足
 

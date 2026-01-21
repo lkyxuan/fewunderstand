@@ -1,4 +1,4 @@
-# Environment
+# Environment (auto-generated from config/settings.yaml)
 .env
 .env.local
 .env.*.local

@@ -71,7 +71,7 @@
 **Selected Versions**:
 | 服务 | 镜像 | 版本策略 |
 |------|------|----------|
-| PostgreSQL + TimescaleDB | `timescale/timescaledb:latest-pg15` | 锁定 PG15 |
+| PostgreSQL + TimescaleDB | `timescale/timescaledb:2.14.2-pg15` | 锁定具体 patch 版本，避免 `latest` |
 | Hasura | `hasura/graphql-engine:v2.36.0` | 锁定具体版本 |
 
 ## 最佳实践
@@ -82,6 +82,7 @@
 2. **健康检查**: 每个服务配置 `healthcheck`
 3. **数据持久化**: 使用 named volumes，不用 bind mounts
 4. **环境变量**: 敏感信息通过 `.env` 文件注入
+5. **默认安全**: 端口默认绑定到 `127.0.0.1`
 
 ### 数据库初始化
 

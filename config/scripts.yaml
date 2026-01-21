@@ -1,0 +1,98 @@
+# scripts.yaml
+# Configuration for shell scripts
+# Defines timeouts, retries, and other script behaviors
+
+# ============================================
+# Default Settings
+# ============================================
+defaults:
+  shell: /bin/bash
+  strict_mode: true  # set -e
+  load_env: true     # Auto-load .env file
+
+# ============================================
+# Timeout Configuration
+# ============================================
+timeouts:
+  service_startup: 60        # Seconds to wait for service to start
+  health_check: 5            # Seconds for individual health check
+  database_ready: 60         # Seconds to wait for database
+  hasura_ready: 60           # Seconds to wait for Hasura
+
+# ============================================
+# Retry Configuration
+# ============================================
+retries:
+  max_attempts: 5
+  delay_seconds: 2
+
+# ============================================
+# Health Check Endpoints
+# ============================================
+health_checks:
+  postgres:
+    type: command
+    command: "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+    container: postgres
+  hasura:
+    type: http
+    url: "http://localhost:${HASURA_PORT}/healthz"
+    expected: "OK"
+
+# ============================================
+# Script Definitions
+# ============================================
+scripts:
+  start:
+    description: "Start all services"
+    steps:
+      - load_env
+      - docker_compose_up
+      - wait_for_postgres
+      - wait_for_hasura
+      - show_access_points
+
+  stop:
+    description: "Stop all services"
+    steps:
+      - docker_compose_down
+    preserve_volumes: true
+
+  health_check:
+    description: "Check health of all services"
+    steps:
+      - check_postgres
+      - check_hasura
+
+  migrate:
+    description: "Run database migrations"
+    requires:
+      - postgres_running
+    steps:
+      - find_migration_files
+      - execute_in_order
+
+  reset:
+    description: "Reset database (destroy all data)"
+    confirm: true
+    steps:
+      - docker_compose_down_volumes
+      - docker_compose_up
+      - wait_for_services
+
+# ============================================
+# Environment Variable Requirements
+# ============================================
+required_env:
+  - name: POSTGRES_USER
+    default: lagos
+  - name: POSTGRES_PASSWORD
+    default: lagos_dev_password
+  - name: POSTGRES_DB
+    default: lagos
+  - name: HASURA_PORT
+    default: "8080"
+  - name: POSTGRES_PORT
+    default: "5432"
+  - name: HASURA_GRAPHQL_ADMIN_SECRET
+    default: lagos_admin_secret

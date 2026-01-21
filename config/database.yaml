@@ -1,0 +1,272 @@
+# database.yaml
+# Database schema and configuration
+# All table definitions and constraints are defined here
+
+# ============================================
+# Global Settings
+# ============================================
+settings:
+  retention_days: 30          # Default data retention period
+  chunk_interval: "1 day"     # TimescaleDB chunk interval
+  enable_compression: false   # Enable compression for old data
+  compression_after_days: 7   # Compress data older than this
+
+# ============================================
+# Field Type Definitions (reusable)
+# ============================================
+field_types:
+  symbol:
+    type: VARCHAR
+    length: 20
+    nullable: false
+
+  price:
+    type: DECIMAL
+    precision: 20
+    scale: 8
+    nullable: false
+    check: "> 0"
+
+  volume:
+    type: DECIMAL
+    precision: 30
+    scale: 8
+    nullable: true
+
+  percentage:
+    type: DECIMAL
+    precision: 10
+    scale: 4
+    nullable: true
+
+  timestamp:
+    type: TIMESTAMPTZ
+    nullable: false
+
+# ============================================
+# Table Definitions
+# ============================================
+tables:
+  # -----------------------------------------
+  # prices: Real-time price snapshots
+  # -----------------------------------------
+  prices:
+    description: "实时价格快照，用于计算指标"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [time, symbol]
+    columns:
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      symbol:
+        type: VARCHAR(20)
+        nullable: false
+      price:
+        type: DECIMAL(20,8)
+        nullable: false
+        check: "price > 0"
+      volume_24h:
+        type: DECIMAL(30,8)
+        nullable: true
+      source:
+        type: VARCHAR(50)
+        nullable: true
+
+  # -----------------------------------------
+  # klines: K-line (candlestick) data
+  # -----------------------------------------
+  klines:
+    description: "1分钟K线数据，用于图表展示"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [time, symbol]
+    columns:
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      symbol:
+        type: VARCHAR(20)
+        nullable: false
+      open:
+        type: DECIMAL(20,8)
+        nullable: false
+      high:
+        type: DECIMAL(20,8)
+        nullable: false
+      low:
+        type: DECIMAL(20,8)
+        nullable: false
+      close:
+        type: DECIMAL(20,8)
+        nullable: false
+      volume:
+        type: DECIMAL(30,8)
+        nullable: true
+    constraints:
+      - name: klines_price_check
+        type: CHECK
+        expression: "high >= low AND high >= open AND high >= close AND low <= open AND low <= close"
+
+  # -----------------------------------------
+  # indicators: Calculated technical indicators
+  # -----------------------------------------
+  indicators:
+    description: "计算后的技术指标"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [time, symbol]
+    columns:
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      symbol:
+        type: VARCHAR(20)
+        nullable: false
+      change_5min:
+        type: DECIMAL(10,4)
+        nullable: true
+      change_15min:
+        type: DECIMAL(10,4)
+        nullable: true
+      change_1h:
+        type: DECIMAL(10,4)
+        nullable: true
+      volume_change:
+        type: DECIMAL(10,4)
+        nullable: true
+
+  # -----------------------------------------
+  # signals: Trading signals
+  # -----------------------------------------
+  signals:
+    description: "触发的交易信号"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [id]
+    columns:
+      id:
+        type: BIGSERIAL
+        nullable: false
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      symbol:
+        type: VARCHAR(20)
+        nullable: false
+      signal_type:
+        type: VARCHAR(50)
+        nullable: false
+      change_pct:
+        type: DECIMAL(10,4)
+        nullable: true
+      price:
+        type: DECIMAL(20,8)
+        nullable: true
+      metadata:
+        type: JSONB
+        nullable: true
+    indexes:
+      - columns: [time]
+        order: DESC
+      - columns: [symbol, time]
+        order: DESC
+
+  # -----------------------------------------
+  # news: Crawled news articles
+  # -----------------------------------------
+  news:
+    description: "爬取的新闻文章"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [id]
+    columns:
+      id:
+        type: BIGSERIAL
+        nullable: false
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      source:
+        type: VARCHAR(50)
+        nullable: false
+      title:
+        type: TEXT
+        nullable: false
+      url:
+        type: TEXT
+        nullable: true
+        unique: true
+      content:
+        type: TEXT
+        nullable: true
+      crawled_at:
+        type: TIMESTAMPTZ
+        default: "NOW()"
+    indexes:
+      - columns: [time]
+        order: DESC
+      - columns: [source, time]
+        order: DESC
+
+  # -----------------------------------------
+  # word_freq: Word frequency statistics
+  # -----------------------------------------
+  word_freq:
+    description: "新闻词频聚合结果"
+    hypertable: true
+    retention_policy: true
+    partition_column: time
+    primary_key: [time, window, word]
+    columns:
+      time:
+        type: TIMESTAMPTZ
+        nullable: false
+      window:
+        type: VARCHAR(20)
+        nullable: false
+      word:
+        type: VARCHAR(100)
+        nullable: false
+      count:
+        type: INTEGER
+        nullable: false
+      latest_news_id:
+        type: BIGINT
+        nullable: true
+        references: news(id)
+    indexes:
+      - columns: [window, count]
+        order: DESC
+
+# ============================================
+# Configuration Table (runtime settings)
+# ============================================
+config_table:
+  name: _config
+  description: "Runtime configuration settings"
+  columns:
+    key:
+      type: VARCHAR(100)
+      primary_key: true
+    value:
+      type: TEXT
+      nullable: false
+    description:
+      type: TEXT
+      nullable: true
+    updated_at:
+      type: TIMESTAMPTZ
+      default: "NOW()"
+  initial_values:
+    - key: retention_days
+      value: "30"
+      description: "Data retention period in days"
+    - key: enable_compression
+      value: "false"
+      description: "Enable TimescaleDB compression"
