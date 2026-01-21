@@ -1,0 +1,108 @@
+name: Auto Create PR
+
+on:
+  push:
+    branches:
+      # 功能开发
+      - 'feature/**'
+      - 'feature_*'
+      # Bug 修复
+      - 'bugfix/**'
+      - 'bugfix_*'
+      # 紧急修复（直接到 main）
+      - 'hotfix/**'
+      - 'hotfix_*'
+      # 日常维护
+      - 'chore/**'
+      - 'chore_*'
+      # 代码重构
+      - 'refactor/**'
+      - 'refactor_*'
+      # 文档
+      - 'docs/**'
+      - 'docs_*'
+      # 编号分支（如 001-infrastructure）
+      - '[0-9][0-9][0-9]-*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          # 检查是否已经存在 PR
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+
+          if [ -n "$PR_EXISTS" ]; then
+            echo "PR already exists: #$PR_EXISTS. Skipping creation."
+            exit 0
+          fi
+
+          # 根据分支类型确定 base 分支和 PR 标题前缀
+          if [[ "$BRANCH_NAME" == hotfix_* || "$BRANCH_NAME" == hotfix/* ]]; then
+            BASE_BRANCH="main"
+            PR_PREFIX="Hotfix"
+          elif [[ "$BRANCH_NAME" == feature_* || "$BRANCH_NAME" == feature/* ]]; then
+            BASE_BRANCH="dev"
+            PR_PREFIX="Feature"
+          elif [[ "$BRANCH_NAME" == bugfix_* || "$BRANCH_NAME" == bugfix/* ]]; then
+            BASE_BRANCH="dev"
+            PR_PREFIX="Bugfix"
+          elif [[ "$BRANCH_NAME" == chore_* || "$BRANCH_NAME" == chore/* ]]; then
+            BASE_BRANCH="dev"
+            PR_PREFIX="Chore"
+          elif [[ "$BRANCH_NAME" == refactor_* || "$BRANCH_NAME" == refactor/* ]]; then
+            BASE_BRANCH="dev"
+            PR_PREFIX="Refactor"
+          elif [[ "$BRANCH_NAME" == docs_* || "$BRANCH_NAME" == docs/* ]]; then
+            BASE_BRANCH="dev"
+            PR_PREFIX="Docs"
+          elif [[ "$BRANCH_NAME" =~ ^[0-9]{3}- ]]; then
+            # 编号分支（如 001-infrastructure）
+            BASE_BRANCH="dev"
+            PR_PREFIX="Feature"
+          else
+            BASE_BRANCH="dev"
+            PR_PREFIX="Update"
+          fi
+
+          # 提取分支名称中的描述部分
+          BRANCH_DESC=$(echo "$BRANCH_NAME" | sed 's|^[^_/]*[_/]||; s|^[0-9]*-||' | tr '-' ' ' | tr '_' ' ')
+          # 首字母大写
+          BRANCH_DESC="$(echo "$BRANCH_DESC" | sed 's/\b\(.\)/\u\1/g')"
+
+          # 创建 PR
+          gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$BRANCH_NAME" \
+            --title "$PR_PREFIX: $BRANCH_DESC" \
+            --body "$(cat <<EOF
+## Summary
+
+Auto-generated PR for branch \`$BRANCH_NAME\`
+
+## Changes
+
+<!-- Describe your changes here -->
+
+## Checklist
+
+- [ ] Tests pass
+- [ ] Documentation updated (if needed)
+- [ ] Code follows project style
+EOF
+)" \
+            || echo "Failed to create PR"
+
+          echo "PR created successfully!"
