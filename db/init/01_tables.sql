@@ -81,7 +81,7 @@ COMMENT ON TABLE signals IS '触发的交易信号';
 -- Table: news (新闻数据)
 -- ============================================
 CREATE TABLE IF NOT EXISTS news (
-    id BIGSERIAL,
+    id BIGSERIAL UNIQUE,
     time TIMESTAMPTZ NOT NULL,
     source VARCHAR(50) NOT NULL,
     title TEXT NOT NULL,
