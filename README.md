@@ -18,8 +18,8 @@
 ### 启动
 
 ```bash
-git clone https://github.com/<owner>/lagos.git
-cd lagos
+git clone https://github.com/<owner>/fuce.git
+cd fuce
 cp .env.example .env
 ./scripts/start.sh
 ```

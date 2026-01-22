@@ -11,8 +11,8 @@
 ### 2. Clone 到本地
 
 ```bash
-git clone https://github.com/<你的用户名>/lagos.git
-cd lagos
+git clone https://github.com/<你的用户名>/fuce.git
+cd fuce
 ```
 
 ### 3. 创建分支
