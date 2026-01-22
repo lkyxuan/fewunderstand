@@ -14,11 +14,13 @@
 
 ## 表结构
 
-| 表 | 说明 | 文档 |
-|---|------|------|
-| prices | 实时价格 | [database-schema.md](database-schema.md#1-prices---实时价格) |
-| indicators | 技术指标 | [database-schema.md](database-schema.md#2-indicators---技术指标) |
-| signals | 交易信号 | [database-schema.md](database-schema.md#3-signals---交易信号) |
+详细表结构定义见 [registry/tables.yaml](../registry/tables.yaml)。
+
+| 表 | 说明 | 来源服务 |
+|---|------|---------|
+| prices | 实时价格 | binance-price |
+| indicators | 技术指标 | indicator-5min |
+| signals | 交易信号 | signal-detector |
 
 ## 数据保留
 
