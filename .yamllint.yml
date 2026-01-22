@@ -3,6 +3,11 @@
 
 extends: default
 
+# 忽略包含嵌入式文本的文件
+ignore: |
+  .github/workflows/auto-pr.yml
+  .github/workflows/notify-dev-update.yml
+
 rules:
   # 行长度限制
   line-length:
