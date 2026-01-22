@@ -32,7 +32,7 @@ services:
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
     ports:
-      - "127.0.0.1:${HASURA_PORT:-8080}:8080"
+      - "${HASURA_PORT:-8080}:8080"
     volumes:
       - ./hasura/metadata:/hasura-metadata:ro
     restart: unless-stopped
