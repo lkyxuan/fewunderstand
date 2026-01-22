@@ -1,40 +1,96 @@
 services:
+  # ==================== 基础设施 ====================
   postgres:
     image: timescale/timescaledb:2.14.2-pg15
-    container_name: lagos-postgres
+    container_name: fuce-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-lagos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lagos_dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-lagos}
+      POSTGRES_USER: ${POSTGRES_USER:-fuce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fuce_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-fuce}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lagos -d lagos"]
+      test: ["CMD-SHELL", "pg_isready -U fuce -d fuce"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 60s
     restart: unless-stopped
 
   hasura:
     image: hasura/graphql-engine:v2.36.0
-    container_name: lagos-hasura
+    container_name: fuce-hasura
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: ${HASURA_GRAPHQL_DATABASE_URL:-postgres://lagos:lagos_dev_password@postgres:5432/lagos}
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-lagos_admin_secret}
-      HASURA_GRAPHQL_ENABLE_CONSOLE: ${HASURA_GRAPHQL_ENABLE_CONSOLE:-true}
-      HASURA_GRAPHQL_DEV_MODE: ${HASURA_GRAPHQL_DEV_MODE:-true}
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_DATABASE_URL: postgres://fuce:fuce_dev_password@postgres:5432/fuce
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-fuce_admin_secret}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
     ports:
       - "127.0.0.1:${HASURA_PORT:-8080}:8080"
     volumes:
       - ./hasura/metadata:/hasura-metadata:ro
+    restart: unless-stopped
+
+  # ==================== 爬虫服务 ====================
+  binance-price:
+    build:
+      context: ./crawlers
+      dockerfile: binance_price/Dockerfile
+    container_name: fuce-binance-price
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: fuce
+      DB_USER: fuce
+      DB_PASSWORD: fuce_dev_password
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 10
+    restart: unless-stopped
+
+  indicator-5min:
+    build:
+      context: ./crawlers
+      dockerfile: indicator_5min/Dockerfile
+    container_name: fuce-indicator-5min
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: fuce
+      DB_USER: fuce
+      DB_PASSWORD: fuce_dev_password
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 60
+    restart: unless-stopped
+
+  signal-detector:
+    build:
+      context: ./crawlers
+      dockerfile: signal_detector/Dockerfile
+    container_name: fuce-signal-detector
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: fuce
+      DB_USER: fuce
+      DB_PASSWORD: fuce_dev_password
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 60
+      SIGNAL_THRESHOLD: 1.0
     restart: unless-stopped
 
 volumes:
