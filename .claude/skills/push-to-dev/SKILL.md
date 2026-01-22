@@ -51,31 +51,40 @@ echo "当前分支: $CURRENT_BRANCH"
 
 停止。
 
-### Step 3: 验证分支命名
+### Step 3: 验证并自动修复分支命名
 
 分支名应符合 `用户名/功能描述` 格式（如 `lkyxuan/add-feature`）。
 
+**如果分支名不符合规范，自动重命名：**
+
+1. 获取 git 用户名：
 ```bash
-if [[ ! "$CURRENT_BRANCH" =~ ^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$ ]]; then
-    echo "分支名不符合规范"
-fi
+GIT_USER=$(git config user.name | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
 ```
 
-**如果分支名不符合规范:**
-
-使用 AskUserQuestion 询问用户：
-```
-当前分支名 "<branch>" 不符合 "用户名/功能描述" 格式。
-
-是否重命名分支？
-- 重命名为: [让用户输入新名称]
-- 保持原名继续
-```
-
-如果用户选择重命名：
+2. 从最近的 commit 消息提取功能描述：
 ```bash
-git branch -m <旧名> <新名>
+# 获取最近 commit 的标题，提取类型和描述
+COMMIT_MSG=$(git log -1 --pretty=%s)
+# 例如 "feat: 添加飞书通知" -> "add-feishu-notify"
+# 例如 "fix: 修复 JSON 格式" -> "fix-json-format"
 ```
+
+3. 生成新分支名并重命名：
+```bash
+NEW_BRANCH="${GIT_USER}/${FEATURE_DESC}"
+git branch -m "$CURRENT_BRANCH" "$NEW_BRANCH"
+CURRENT_BRANCH="$NEW_BRANCH"
+```
+
+4. 输出：
+```
+分支已自动重命名: <旧名> → <新名>
+```
+
+**命名规则：**
+- 用户名：从 git config user.name 获取，转小写，空格变连字符
+- 功能描述：从 commit 消息提取，使用英文短横线连接，如 `add-multi-coin-crawler`
 
 ### Step 4: 推送当前分支
 
@@ -139,7 +148,7 @@ dev 分支已更新并推送到远程。
 |------|------|---------|
 | 1 | 检查未提交更改 | 停止，要求先提交 |
 | 2 | 检查当前分支 | 停止，不允许在 dev/main 操作 |
-| 3 | 验证分支名 | 询问是否重命名 |
+| 3 | 验证分支名 | 自动根据 commit 内容重命名 |
 | 4 | 推送分支 | 显示错误，停止 |
 | 5 | 合并到 dev | 显示冲突，停止 |
 | 6 | 返回原分支 | - |
