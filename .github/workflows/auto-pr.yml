@@ -23,6 +23,8 @@ on:
       - 'docs_*'
       # 编号分支（如 001-infrastructure）
       - '[0-9][0-9][0-9]-*'
+      # 用户个人分支
+      - 'lkyxuan/**'
 
 permissions:
   contents: write
