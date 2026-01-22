@@ -1,0 +1,33 @@
+# yamllint 配置
+# https://yamllint.readthedocs.io/
+
+extends: default
+
+# 忽略包含嵌入式文本的文件
+ignore: |
+  .github/workflows/auto-pr.yml
+  .github/workflows/notify-dev-update.yml
+
+rules:
+  # 行长度限制
+  line-length:
+    max: 150
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # 允许 on: push 等简写
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off']
+
+  # 注释前不强制空格
+  comments:
+    require-starting-space: false
+    min-spaces-from-content: 1
+
+  # 文档开始标记 (---) 不强制
+  document-start: disable
+
+  # 缩进
+  indentation:
+    spaces: 2
+    indent-sequences: whatever
