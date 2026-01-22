@@ -57,6 +57,19 @@
                 }
               }
             ]
+          },
+          {
+            "table": {"name": "news", "schema": "public"},
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": "*",
+                  "filter": {},
+                  "allow_aggregations": true
+                }
+              }
+            ]
           }
         ],
         "configuration": {
