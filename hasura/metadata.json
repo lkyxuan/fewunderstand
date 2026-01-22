@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {
+            "table": {"name": "prices", "schema": "public"},
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": "*",
+                  "filter": {},
+                  "allow_aggregations": true
+                }
+              }
+            ]
+          },
+          {
+            "table": {"name": "indicators", "schema": "public"},
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": "*",
+                  "filter": {},
+                  "allow_aggregations": true
+                }
+              }
+            ]
+          },
+          {
+            "table": {"name": "signals", "schema": "public"},
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": "*",
+                  "filter": {},
+                  "allow_aggregations": true
+                }
+              }
+            ]
+          },
+          {
+            "table": {"name": "klines", "schema": "public"},
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": "*",
+                  "filter": {},
+                  "allow_aggregations": true
+                }
+              }
+            ]
+          }
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": {"from_env": "HASURA_GRAPHQL_DATABASE_URL"},
+            "isolation_level": "read-committed",
+            "use_prepared_statements": true
+          }
+        }
+      }
+    ]
+  }
+}
