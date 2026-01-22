@@ -107,6 +107,20 @@ Create these labels if not exist:
 - `task` - From tasks.md
 - `phase-0`, `phase-1`, etc. - Phase tracking
 - `blocked` - Has unmet dependencies
+- `in-progress` - 正在开发中
+- `ready-for-review` - 已完成开发，等待审核
+
+## Issue 状态流转 (Issue-Driven Development)
+
+```
+[task]              创建 issue (tasks-to-issues)
+   ↓
+[task, in-progress] 开始开发
+   ↓
+[task, ready-for-review]  push-to-dev 后标记
+   ↓
+Closed              merge-pr 后关闭
+```
 
 ## Common Mistakes
 

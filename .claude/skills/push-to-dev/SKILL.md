@@ -1,15 +1,15 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, close issues, and cleanup. Supports Issue-driven development.
+description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, mark issues as ready-for-review, and cleanup. Supports Issue-driven development.
 ---
 
 # Push to Dev
 
 ## Overview
 
-自动提交、重命名分支、推送到远程、合并到 dev 分支、关闭相关 Issues 的完整流程。
+自动提交、重命名分支、推送到远程、合并到 dev 分支、标记 Issues 为等待审核状态的完整流程。
 
-**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 关闭 Issues → 返回原分支
+**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 标记 Issues ready-for-review → 返回原分支
 
 **与 merge-pr 的区别**：
 - push-to-dev：直接合并，快速迭代，无需 PR
@@ -140,28 +140,37 @@ git add . && git commit && git push origin dev
 
 停止。
 
-### Step 6: 关闭相关 Issues (Issue-Driven Development)
+### Step 6: 标记 Issues 为 Ready for Review (Issue-Driven Development)
 
-合并完成后，检查并关闭相关的 Issues：
+合并到 dev 后，将相关 Issues 标记为"等待审核"状态：
 
 ```bash
 # 查看当前开放的 task issues
 gh issue list --state open --label task
 
-# 对比本次改动和 issue 描述，识别已完成的 issues
+# 对比本次改动和 issue 描述，识别已完成开发的 issues
 ```
 
-**关闭 Issue：**
+**更新 Issue 状态：**
 ```bash
-# 关闭已完成的 issues
-gh issue close <ISSUE_NUMBER> --comment "完成于 commit <COMMIT_HASH>，已合并到 dev"
+# 移除 in-progress，添加 ready-for-review
+gh issue edit <ISSUE_NUMBER> --remove-label "in-progress" --add-label "ready-for-review"
+
+# 添加评论说明
+gh issue comment <ISSUE_NUMBER> --body "开发完成，已合并到 dev (commit <COMMIT_HASH>)，等待 PR 审核"
+```
+
+**Issue 状态流转：**
+```
+[task] → [task, in-progress] → [task, ready-for-review] → Closed
+ 创建        开发中              push-to-dev              merge-pr
 ```
 
 **检查清单：**
 1. 列出本次 commit 涉及的文件
 2. 对比开放的 task issues
-3. 确认哪些 issues 的验证标准已满足
-4. 关闭已完成的 issues，附带 commit 引用
+3. 确认哪些 issues 已完成开发
+4. 标记为 ready-for-review（不关闭，等 merge-pr 时关闭）
 
 ### Step 7: 返回原分支
 
@@ -190,7 +199,7 @@ dev 分支已更新并推送到远程。
 | 3 | 根据 commit 重命名分支 | 自动重命名 |
 | 4 | 推送分支 | 显示错误，停止 |
 | 5 | 合并到 dev | 显示冲突，停止 |
-| 6 | 关闭相关 Issues | 检查并关闭已完成的 issues |
+| 6 | 标记 Issues ready-for-review | 等待 PR 审核 |
 | 7 | 返回原分支 | - |
 
 ## Branch Naming Examples
