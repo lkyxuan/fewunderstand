@@ -87,4 +87,67 @@ ssh root@46.224.5.136 "docker compose logs -f binance-price"
 ssh root@46.224.5.136 "docker exec fuce-postgres psql -U fuce -d fuce -c 'SELECT * FROM prices ORDER BY time DESC LIMIT 5;'"
 ```
 
+## 开发流程规范（强制执行）
+
+> **重要**: 多人协作环境，必须严格遵守以下流程，禁止直接在服务器上修改代码。
+
+### 前端开发流程
+
+```
+本地修改 → rsync 同步 → 服务器构建 → 浏览器测试 → 本地 git 提交
+```
+
+#### 1. 本地修改代码
+
+所有代码修改必须在本地进行：
+- 本地路径: `/Users/qiji/conductor/workspaces/fewunderstand-v1/dakar/frontend/`
+- 使用 Edit/Write 工具修改文件
+
+#### 2. 同步到服务器
+
+```bash
+rsync -avz --exclude 'node_modules' --exclude '.next' \
+  /Users/qiji/conductor/workspaces/fewunderstand-v1/dakar/frontend/ \
+  root@46.224.5.136:/root/fuce/frontend/
+```
+
+#### 3. 服务器构建和重启
+
+```bash
+# 构建
+ssh root@46.224.5.136 "cd /root/fuce/frontend && npm run build"
+
+# 重启（先停后启）
+ssh root@46.224.5.136 "pkill -f 'next-server' || true"
+ssh root@46.224.5.136 "cd /root/fuce/frontend && PORT=18080 npm start &"
+```
+
+#### 4. 浏览器测试
+
+- 前端地址: http://46.224.5.136:18080
+- GraphQL: http://46.224.5.136:8080/v1/graphql
+
+#### 5. 本地 Git 提交
+
+测试通过后，在本地提交代码：
+```bash
+git add <files>
+git commit -m "feat/fix: 描述"
+git push origin <branch>
+```
+
+### 禁止事项
+
+- **禁止**直接在服务器 `/root/fuce/frontend/` 目录修改代码
+- **禁止**在服务器上执行 git 操作
+- **禁止**跳过 rsync 直接在服务器编辑文件
+
+### 服务器目录说明
+
+| 目录 | 用途 | 可否修改 |
+|------|------|----------|
+| `/root/fuce/frontend/` | 前端运行目录 | 仅通过 rsync 同步 |
+| `/root/fuce/crawlers/` | 爬虫脚本 | 仅通过 rsync 同步 |
+| `/root/fuce/docker-compose.yml` | 服务配置 | 仅通过 rsync 同步 |
+
 <!-- MANUAL ADDITIONS END -->
