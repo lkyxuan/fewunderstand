@@ -1,0 +1,59 @@
+name: Notify Dev Branch Update
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Lark Notification
+        env:
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          # 只取 commit message 的第一行
+          FIRST_LINE=$(echo "$COMMIT_MSG" | head -1)
+
+          # 构建 JSON payload
+          PAYLOAD=$(jq -n \
+            --arg repo "$REPO" \
+            --arg actor "$ACTOR" \
+            --arg msg "$FIRST_LINE" \
+            --arg url "$COMMIT_URL" \
+            '{
+              msg_type: "interactive",
+              card: {
+                header: {
+                  title: { tag: "plain_text", content: "🚀 Dev 分支已更新" },
+                  template: "blue"
+                },
+                elements: [
+                  {
+                    tag: "div",
+                    text: {
+                      tag: "lark_md",
+                      content: "**仓库**: \($repo)\n**提交者**: \($actor)\n**提交信息**: \($msg)"
+                    }
+                  },
+                  {
+                    tag: "action",
+                    actions: [{
+                      tag: "button",
+                      text: { tag: "plain_text", content: "查看提交" },
+                      type: "primary",
+                      url: $url
+                    }]
+                  }
+                ]
+              }
+            }')
+
+          # 发送通知
+          curl -X POST "https://open.larksuite.com/open-apis/bot/v2/hook/9a925d0c-d4d6-4107-90d1-e9a42e8f0111" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"

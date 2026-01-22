@@ -1,0 +1,59 @@
+# API 注册
+# 记录所有 API 端点信息
+
+endpoint:
+  url: http://46.224.5.136:8080/v1/graphql
+  protocol: GraphQL
+  auth:
+    type: header
+    header: x-hasura-admin-secret
+    value: fuce_admin_secret
+
+console:
+  url: http://46.224.5.136:8080
+  description: Hasura 管理控制台
+
+queries:
+  - name: GetLatestPrices
+    description: 获取最新价格
+    table: prices
+    example: |
+      query {
+        prices(order_by: {time: desc}, limit: 10) {
+          time
+          symbol
+          price
+        }
+      }
+
+  - name: GetLatestIndicators
+    description: 获取最新指标
+    table: indicators
+    example: |
+      query {
+        indicators(order_by: {time: desc}, limit: 10) {
+          time
+          symbol
+          change_5min_pct
+        }
+      }
+
+  - name: GetRecentSignals
+    description: 获取最近信号
+    table: signals
+    example: |
+      query {
+        signals(order_by: {time: desc}, limit: 20) {
+          id
+          time
+          symbol
+          signal_type
+          change_pct
+        }
+      }
+
+curl_example: |
+  curl -X POST http://46.224.5.136:8080/v1/graphql \
+    -H "Content-Type: application/json" \
+    -H "x-hasura-admin-secret: fuce_admin_secret" \
+    -d '{"query": "{ prices(limit: 5, order_by: {time: desc}) { time symbol price } }"}'

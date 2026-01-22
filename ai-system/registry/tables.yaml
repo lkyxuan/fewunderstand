@@ -1,0 +1,104 @@
+# 数据库表注册
+# 记录所有数据库表的结构信息
+
+database:
+  name: fuce
+  host: postgres
+  port: 5432
+  user: fuce
+  password: fuce_dev_password
+
+tables:
+  - name: prices
+    description: 实时价格数据
+    source: binance-price
+    interval: 10s
+    columns:
+      - name: time
+        type: timestamptz
+        nullable: false
+        description: 采集时间
+      - name: symbol
+        type: varchar(20)
+        nullable: false
+        description: 交易对
+      - name: price
+        type: numeric(20,8)
+        nullable: false
+        description: 价格
+    primary_key: [time, symbol]
+    indexes:
+      - name: prices_time_idx
+        columns: [time]
+        order: desc
+    timescale: true
+    sample:
+      time: "2026-01-22T01:58:35.202570+00:00"
+      symbol: "BTCUSDT"
+      price: 90122.44000000
+
+  - name: indicators
+    description: 技术指标
+    source: indicator-5min
+    interval: 60s
+    columns:
+      - name: time
+        type: timestamptz
+        nullable: false
+        description: 计算时间
+      - name: symbol
+        type: varchar(20)
+        nullable: false
+        description: 交易对
+      - name: change_5min_pct
+        type: numeric(10,4)
+        nullable: true
+        description: 5分钟涨跌幅百分比
+    primary_key: [time, symbol]
+    indexes:
+      - name: indicators_time_idx
+        columns: [time]
+        order: desc
+    timescale: true
+    sample:
+      time: "2026-01-22T01:58:12.685689+00:00"
+      symbol: "BTCUSDT"
+      change_5min_pct: 0.0662
+
+  - name: signals
+    description: 交易信号
+    source: signal-detector
+    interval: 60s
+    columns:
+      - name: id
+        type: bigserial
+        nullable: false
+        description: 自增ID
+      - name: time
+        type: timestamptz
+        nullable: false
+        description: 信号触发时间
+      - name: symbol
+        type: varchar(20)
+        nullable: false
+        description: 交易对
+      - name: signal_type
+        type: varchar(50)
+        nullable: false
+        description: 信号类型
+      - name: change_pct
+        type: numeric(10,4)
+        nullable: true
+        description: 触发时涨跌幅
+    primary_key: [time, id]
+    indexes:
+      - name: idx_signals_time
+        columns: [time]
+        order: desc
+    timescale: true
+    sample:
+      id: 1
+      time: "2026-01-22T02:30:00.000000+00:00"
+      symbol: "BTCUSDT"
+      signal_type: "pump_5min"
+      change_pct: 1.2500
