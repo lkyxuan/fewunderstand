@@ -1,40 +1,21 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and merge to dev - handles branch naming validation, push, merge, and cleanup
+description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, and cleanup
 ---
 
 # Push to Dev
 
 ## Overview
 
-检查当前分支、推送到远程、合并到 dev 分支的完整流程。
+自动提交、重命名分支、推送到远程、合并到 dev 分支的完整流程。
 
-**Core principle:** 检查状态 → 验证分支名 → 推送 → 合并到 dev → 返回原分支
+**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 返回原分支
 
 **Announce at start:** "使用 push-to-dev skill 来推送并合并到 dev 分支。"
 
 ## The Process
 
-### Step 1: 检查 Git 状态
-
-```bash
-# 检查未提交的更改
-git status --porcelain
-```
-
-**如果有未提交的更改:**
-```
-发现未提交的更改：
-<列出更改的文件>
-
-请先提交或暂存这些更改后再执行 push。
-```
-
-停止。不继续后续步骤。
-
-**如果没有未提交的更改:** 继续 Step 2。
-
-### Step 2: 验证当前分支
+### Step 1: 检查当前分支
 
 ```bash
 CURRENT_BRANCH=$(git branch --show-current)
@@ -51,40 +32,71 @@ echo "当前分支: $CURRENT_BRANCH"
 
 停止。
 
-### Step 3: 验证并自动修复分支命名
+### Step 2: 检查并自动提交
 
-分支名应符合 `用户名/功能描述` 格式（如 `lkyxuan/add-feature`）。
+```bash
+git status --porcelain
+```
 
-**如果分支名不符合规范，自动重命名：**
+**如果有未提交的更改，自动提交：**
+
+1. 查看变更内容：
+```bash
+git diff --stat
+git diff
+```
+
+2. 分析变更，生成合适的 commit 消息（遵循仓库的 commit 风格）
+
+3. 添加并提交：
+```bash
+git add <相关文件>
+git commit -m "<type>: <描述>
+
+<详细说明如有必要>
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+```
+
+**如果没有更改也没有新 commit:** 提示无内容可推送，停止。
+
+### Step 3: 根据 commit 内容重命名分支
+
+**始终检查分支名是否反映当前工作内容。**
+
+分支名应符合 `用户名/功能描述` 格式，且功能描述必须反映实际改动内容。
 
 1. 获取 git 用户名：
 ```bash
 GIT_USER=$(git config user.name | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
 ```
 
-2. 从最近的 commit 消息提取功能描述：
+2. 从最近的 commit 消息提取功能描述，转换为英文短横线格式：
 ```bash
-# 获取最近 commit 的标题，提取类型和描述
 COMMIT_MSG=$(git log -1 --pretty=%s)
-# 例如 "feat: 添加飞书通知" -> "add-feishu-notify"
-# 例如 "fix: 修复 JSON 格式" -> "fix-json-format"
+# 分析 commit 消息，提取核心功能
+# 例如：
+# "feat: 完善 Hasura GraphQL 配置支持前端 MVP" -> "hasura-graphql-frontend-mvp"
+# "fix: 修复飞书通知 JSON 格式问题" -> "fix-feishu-notify-json"
+# "refactor: 简化 CI 流程" -> "simplify-ci"
 ```
 
-3. 生成新分支名并重命名：
+3. 检查当前分支名是否已经正确反映功能：
+   - 如果分支名像 `lkyxuan/salvador`、`lkyxuan/test`、`feature-1` 等通用名称 → 需要重命名
+   - 如果分支名已经反映功能如 `lkyxuan/hasura-graphql-config` → 可以保留
+
+4. 如需重命名：
 ```bash
 NEW_BRANCH="${GIT_USER}/${FEATURE_DESC}"
 git branch -m "$CURRENT_BRANCH" "$NEW_BRANCH"
 CURRENT_BRANCH="$NEW_BRANCH"
-```
-
-4. 输出：
-```
-分支已自动重命名: <旧名> → <新名>
+echo "分支已重命名: <旧名> → <新名>"
 ```
 
 **命名规则：**
 - 用户名：从 git config user.name 获取，转小写，空格变连字符
-- 功能描述：从 commit 消息提取，使用英文短横线连接，如 `add-multi-coin-crawler`
+- 功能描述：从 commit 消息核心内容提取，使用英文短横线连接
+- 保持简洁：3-5 个单词，如 `add-klines-view`、`fix-hasura-metadata`
 
 ### Step 4: 推送当前分支
 
@@ -146,37 +158,33 @@ dev 分支已更新并推送到远程。
 
 | 步骤 | 操作 | 失败处理 |
 |------|------|---------|
-| 1 | 检查未提交更改 | 停止，要求先提交 |
-| 2 | 检查当前分支 | 停止，不允许在 dev/main 操作 |
-| 3 | 验证分支名 | 自动根据 commit 内容重命名 |
+| 1 | 检查当前分支 | 停止，不允许在 dev/main 操作 |
+| 2 | 检查并自动提交 | 自动 commit |
+| 3 | 根据 commit 重命名分支 | 自动重命名 |
 | 4 | 推送分支 | 显示错误，停止 |
 | 5 | 合并到 dev | 显示冲突，停止 |
 | 6 | 返回原分支 | - |
 
-## Common Mistakes
+## Branch Naming Examples
 
-**跳过状态检查**
-- **问题:** 未提交的更改导致合并失败
-- **修复:** 始终先检查 git status
-
-**在 dev/main 分支直接操作**
-- **问题:** 破坏主分支历史
-- **修复:** 强制要求在功能分支操作
-
-**不验证分支名**
-- **问题:** 分支名混乱，难以追踪
-- **修复:** 强制 `用户名/功能` 格式
+| Commit 消息 | 分支名 |
+|------------|--------|
+| feat: 完善 Hasura GraphQL 配置 | `lkyxuan/hasura-graphql-config` |
+| fix: 修复飞书通知 JSON 格式 | `lkyxuan/fix-feishu-notify-json` |
+| feat: 添加 K 线连续聚合视图 | `lkyxuan/add-klines-view` |
+| refactor: 简化 CI 流程 | `lkyxuan/simplify-ci` |
+| feat: 爬虫支持多币种采集 | `lkyxuan/multi-coin-crawler` |
 
 ## Red Flags
 
 **Never:**
 - 在 dev 或 main 分支直接执行
-- 跳过未提交更改检查
+- 使用通用分支名如 `test`、`feature`、`dev2`
 - Force push 到 dev 分支
 - 忽略合并冲突
 
 **Always:**
-- 先检查 git 状态
-- 验证分支命名规范
+- 自动提交未暂存的更改
+- 根据实际改动内容命名分支
 - 合并后返回原分支
 - 显示操作结果

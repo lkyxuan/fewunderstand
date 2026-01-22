@@ -30,12 +30,42 @@ services:
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-fuce_admin_secret}
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
+      # 启用匿名角色访问（前端无需认证）
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      # 启用实时订阅
+      HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL: 1000
+      HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE: 100
     ports:
       - "${HASURA_PORT:-8080}:8080"
     volumes:
       - ./hasura/metadata:/hasura-metadata:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
+
+  # Hasura metadata 初始化（启动后自动应用）
+  hasura-init:
+    image: curlimages/curl:latest
+    container_name: fuce-hasura-init
+    depends_on:
+      hasura:
+        condition: service_healthy
+    volumes:
+      - ./hasura:/hasura:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo 'Applying Hasura metadata...'
+        METADATA=$$(cat /hasura/metadata.json)
+        curl -s -X POST http://hasura:8080/v1/metadata \
+          -H 'Content-Type: application/json' \
+          -H 'x-hasura-admin-secret: fuce_admin_secret' \
+          -d "{\"type\": \"replace_metadata\", \"version\": 2, \"args\": $$METADATA}"
+        echo 'Metadata applied!'
+    restart: "no"
 
   # ==================== 爬虫服务 ====================
   binance-price:
