@@ -38,7 +38,8 @@ jobs:
         run: |
           if ls scripts/*.sh 1> /dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y shellcheck
-            shellcheck scripts/*.sh
+            # -e SC1091: 忽略无法读取的 source 文件 (.env)
+            shellcheck -e SC1091 scripts/*.sh
           else
             echo "No shell scripts found, skipping..."
           fi
