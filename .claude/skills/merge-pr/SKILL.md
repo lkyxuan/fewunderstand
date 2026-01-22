@@ -1,19 +1,26 @@
 ---
 name: merge-pr
-description: Use when merging pull requests, especially multi-contributor PRs or security-sensitive changes. Triggers when user asks to merge, approve, or complete a PR. Supports Issue-driven development by closing related issues after merge.
+description: Use when merging pull requests to dev branch, especially multi-contributor PRs or security-sensitive changes. Triggers when user asks to merge, approve, or complete a PR. Supports Issue-driven development by closing related issues after merge.
 ---
 
-# Merge PR Safely
+# Merge PR to Dev
 
 ## Overview
 
-Merge pull requests with security awareness and proper verification. This skill ensures PRs are reviewed for security risks before merging, and closes related Issues after merge (Issue-driven development).
+通过 PR 合并代码到 dev 分支，包含安全检查和 Issue 关闭。适用于需要 review 的正式流程。
+
+**目标分支**：dev（开发分支）
+
+**与 push-to-dev 的区别**：
+- push-to-dev：直接合并，快速迭代
+- merge-pr：通过 PR 合并，有 review 流程
 
 ## When to Use
 
-- Merging any PR (especially with multiple contributors)
+- 合并 PR 到 dev 分支
+- 需要 code review 的场景
+- 多人协作的 PR
 - User asks to "merge", "approve", or "complete" a PR
-- Hotfix or urgent merge requests
 
 ## Security Checklist (MANDATORY)
 
