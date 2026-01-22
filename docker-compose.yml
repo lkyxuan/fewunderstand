@@ -52,7 +52,6 @@ services:
       DB_NAME: fuce
       DB_USER: fuce
       DB_PASSWORD: fuce_dev_password
-      SYMBOL: BTCUSDT
       INTERVAL_SECONDS: 10
     restart: unless-stopped
 
@@ -70,7 +69,6 @@ services:
       DB_NAME: fuce
       DB_USER: fuce
       DB_PASSWORD: fuce_dev_password
-      SYMBOL: BTCUSDT
       INTERVAL_SECONDS: 60
     restart: unless-stopped
 
@@ -88,7 +86,6 @@ services:
       DB_NAME: fuce
       DB_USER: fuce
       DB_PASSWORD: fuce_dev_password
-      SYMBOL: BTCUSDT
       INTERVAL_SECONDS: 60
       SIGNAL_THRESHOLD: 1.0
     restart: unless-stopped

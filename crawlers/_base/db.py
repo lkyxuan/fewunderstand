@@ -37,6 +37,14 @@ def execute(sql: str, params: tuple = None):
             conn.commit()
 
 
+def execute_many(sql: str, params_list: list[tuple]):
+    """批量执行 SQL"""
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.executemany(sql, params_list)
+            conn.commit()
+
+
 def query(sql: str, params: tuple = None) -> list:
     """查询并返回结果"""
     with get_connection() as conn:

@@ -10,8 +10,7 @@ def main():
     calculator = Indicator5minCalculator()
 
     print("=" * 50)
-    print(f"Indicator 5min Calculator")
-    print(f"Symbol: {config.SYMBOL}")
+    print(f"Indicator 5min Calculator (All symbols)")
     print(f"Interval: {config.INTERVAL_SECONDS}s")
     print("=" * 50)
 

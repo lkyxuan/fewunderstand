@@ -10,8 +10,7 @@ def main():
     detector = SignalDetector()
 
     print("=" * 50)
-    print(f"Signal Detector")
-    print(f"Symbol: {config.SYMBOL}")
+    print(f"Signal Detector (All symbols)")
     print(f"Threshold: {config.SIGNAL_THRESHOLD}%")
     print(f"Interval: {config.INTERVAL_SECONDS}s")
     print("=" * 50)

@@ -10,8 +10,7 @@ def main():
     crawler = BinancePriceCrawler()
 
     print("=" * 50)
-    print(f"Binance Price Crawler")
-    print(f"Symbol: {config.SYMBOL}")
+    print(f"Binance Price Crawler (All USDT pairs)")
     print(f"Interval: {config.INTERVAL_SECONDS}s")
     print("=" * 50)
 
