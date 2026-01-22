@@ -1,6 +1,6 @@
 import TradingViewChart from "../components/TradingViewChart";
 import LightweightChart from "../components/LightweightChart";
-import SignalFeed from "../components/SignalFeed";
+import NewsFeed from "../components/NewsFeed";
 import BackendStatus from "../components/BackendStatus";
 import { CHART_CONFIG } from "../lib/config";
 import styles from "./page.module.css";
@@ -37,7 +37,7 @@ export default function Home() {
         </div>
 
         <aside className={styles.rightColumn}>
-          <SignalFeed />
+          <NewsFeed />
         </aside>
       </section>
     </main>

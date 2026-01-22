@@ -1,11 +1,13 @@
 .page {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -107,6 +109,7 @@
   gap: 20px;
   flex: 1;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .leftColumn {
@@ -114,6 +117,7 @@
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .rightColumn {
@@ -121,6 +125,7 @@
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* Pair Tag */

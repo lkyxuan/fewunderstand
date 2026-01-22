@@ -59,3 +59,31 @@ export const SUBSCRIBE_SIGNALS = gql`
     }
   }
 `;
+
+// 新闻查询
+export const GET_NEWS = gql`
+  query GetNews {
+    news(order_by: { time: desc }, limit: 50) {
+      id
+      time
+      source
+      title
+      link
+      summary
+    }
+  }
+`;
+
+// 新闻实时订阅
+export const SUBSCRIBE_NEWS = gql`
+  subscription SubscribeNews {
+    news(order_by: { time: desc }, limit: 20) {
+      id
+      time
+      source
+      title
+      link
+      summary
+    }
+  }
+`;
