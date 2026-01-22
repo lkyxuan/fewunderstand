@@ -1,5 +1,19 @@
 ## 1. Implementation
-- [ ] 1.1 选定前端框架与目录结构（若已有则复用）
+
+### 1.1 项目初始化（已决定技术栈）
+- [x] 1.1.1 框架选型：**Next.js 14 + React 18 + TypeScript**
+- [ ] 1.1.2 初始化 `frontend/` 目录，配置 Next.js App Router
+- [ ] 1.1.3 安装依赖：Apollo Client、Lightweight Charts、TradingView Widget
+- [ ] 1.1.4 配置 Apollo Client 连接 Hasura GraphQL
+
+**技术栈确定**（2026-01-22）：
+- 框架：Next.js + React + TypeScript
+- GraphQL：Apollo Client
+- 图表：TradingView Widget + Lightweight Charts
+- 样式：深色主题，CSS Modules 或 Tailwind
+- 详见 `design.md` → Technology Stack Decisions
+
+### 1.2-1.10 功能实现
 - [ ] 1.2 搭建页面三块布局骨架（主图区上下两图 + 右侧信息流）
 - [ ] 1.3 集成 TradingView 插件并完成基础交互
 - [ ] 1.4 接入 Hasura GraphQL 数据源（klines/indicators/signals），含订阅

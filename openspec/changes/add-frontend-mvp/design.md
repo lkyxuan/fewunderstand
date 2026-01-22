@@ -31,6 +31,84 @@ MVP 前端需要以单页方式呈现三块核心模块：专业图表、可插�
 ## Open Questions
 - 信息流告警规则的最低可用定义
 
+## Technology Stack Decisions (2026-01-22 讨论确定)
+
+### 前端框架：Next.js + React
+
+**选择理由**：
+- AI（Codex/Claude）对 React/Next.js 最熟悉，生成代码质量最高
+- 生态成熟，TradingView 和 Lightweight Charts 都有良好的 React 集成
+- 支持长远演进：SSR/SSG、API Routes、NextAuth 认证、PWA 等
+- 部署简单（Vercel 一键部署）
+
+**不选原生 JS 的原因**：
+- 虽然 MVP 场景简单，原生 JS 够用
+- 但从终极形态考虑（用户系统、AI 配置、多币种），Next.js 一步到位，避免后期重写
+
+### GraphQL 客户端：Apollo Client
+
+**选择理由**：
+- 与 React/Next.js 集成最成熟
+- 内置缓存管理
+- 支持 Subscription（WebSocket 实时订阅）
+- 类型安全（配合 GraphQL Code Generator）
+
+### 图表库
+
+| 图表 | 库 | 用途 |
+|------|---|------|
+| 专业图表 | TradingView Widget | 用户自由看盘、画线、加指标 |
+| 自有 K 线 | Lightweight Charts | 自有数据渲染，支持自定义标记（买入/卖出信号） |
+
+### 样式方案
+
+- **主题**：深色主题（参考 json-render.dev 风格）
+- **配色**：
+  - 背景：`#000` / `#0a0a0a`
+  - 强调色：`#00ff88`（青绿色）
+  - 涨：`#00ff88`，跌：`#ff4757`
+- **动画**：CSS `@keyframes` 实现信号弹入效果
+- **方案**：CSS Modules 或 Tailwind CSS（待定）
+
+### 项目结构
+
+```
+frontend/
+├── app/
+│   ├── layout.tsx          # 根布局（深色主题）
+│   ├── page.tsx            # 主页（三栏布局）
+│   └── globals.css         # 全局样式
+├── components/
+│   ├── TradingViewChart.tsx    # TradingView 封装
+│   ├── LightweightChart.tsx    # Lightweight Charts 封装
+│   └── SignalFeed.tsx          # 信号信息流
+├── lib/
+│   ├── apollo-client.ts    # Apollo Client 配置
+│   └── queries.ts          # GraphQL 查询/订阅
+├── package.json
+└── next.config.js
+```
+
+### 架构演进路径
+
+| 阶段 | 功能 | 技术 |
+|------|------|------|
+| **MVP** | 固定看板，BTC 数据 | Next.js + Apollo + Hasura |
+| **V1** | 多币种支持 | 状态管理（Zustand） |
+| **V2** | 用户登录、保存配置 | NextAuth + Hasura 权限 |
+| **V3** | 告警推送 | Telegram Bot / Email |
+| **V4** | AI 自定义界面 | json-render 集成 |
+| **V5** | 付费订阅 | Stripe |
+
+### 关于 json-render
+
+**当前**：MVP 不使用，固定布局即可
+
+**未来**：当需要「让用户通过 AI 自定义界面」时引入
+- 用户输入「给我加个 ETH 图表」
+- AI 生成符合组件目录的 JSON
+- json-render 渲染成实际组件
+
 ## Technical Requirements (审计后补充)
 
 ### 后端数据源
