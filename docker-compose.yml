@@ -120,5 +120,24 @@ services:
       SIGNAL_THRESHOLD: 1.0
     restart: unless-stopped
 
+  binance-kline:
+    build:
+      context: ./crawlers
+      dockerfile: binance_kline/Dockerfile
+    container_name: fuce-binance-kline
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: fuce
+      DB_USER: fuce
+      DB_PASSWORD: fuce_dev_password
+      SYMBOLS: BTCUSDT
+      HISTORY_DAYS: 30
+      INTERVAL_SECONDS: 60
+    restart: unless-stopped
+
 volumes:
   postgres_data:
