@@ -1,0 +1,41 @@
+# 信号类型注册
+# 记录所有信号的定义和触发条件
+
+signals:
+  - type: pump_5min
+    category: price_alert
+    description: 5分钟内价格上涨超过阈值
+    trigger:
+      indicator: change_5min_pct
+      condition: ">="
+      threshold_env: SIGNAL_THRESHOLD
+      threshold_default: 1.0
+    severity: warning
+    display:
+      emoji: "🚀"
+      color: green
+      message_template: "{symbol} 5分钟上涨 {change_pct}%"
+
+  - type: dump_5min
+    category: price_alert
+    description: 5分钟内价格下跌超过阈值
+    trigger:
+      indicator: change_5min_pct
+      condition: "<="
+      threshold_env: SIGNAL_THRESHOLD
+      threshold_default: -1.0
+    severity: warning
+    display:
+      emoji: "📉"
+      color: red
+      message_template: "{symbol} 5分钟下跌 {change_pct}%"
+
+# 信号分类说明
+categories:
+  price_alert: 价格异动提醒
+
+# 严重级别
+severity_levels:
+  info: 信息
+  warning: 警告
+  critical: 严重

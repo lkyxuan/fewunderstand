@@ -1,0 +1,72 @@
+# 服务注册
+# 记录所有运行服务的配置信息
+
+services:
+  # 基础设施
+  - name: postgres
+    type: infrastructure
+    container: fuce-postgres
+    image: timescale/timescaledb:2.14.2-pg15
+    description: 数据库（PostgreSQL + TimescaleDB）
+    ports:
+      - internal: 5432
+        external: 5432
+        expose: false
+    healthcheck: pg_isready -U fuce -d fuce
+
+  - name: hasura
+    type: infrastructure
+    container: fuce-hasura
+    image: hasura/graphql-engine:v2.36.0
+    description: GraphQL API 引擎
+    ports:
+      - internal: 8080
+        external: 8080
+        expose: true
+    depends_on: [postgres]
+    env:
+      HASURA_GRAPHQL_ADMIN_SECRET: fuce_admin_secret
+
+  # 爬虫服务
+  - name: binance-price
+    type: crawler
+    container: fuce-binance-price
+    description: 币安价格采集
+    source_dir: crawlers/binance_price
+    depends_on: [postgres]
+    output_table: prices
+    env:
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 10
+
+  - name: indicator-5min
+    type: calculator
+    container: fuce-indicator-5min
+    description: 5分钟涨跌幅计算
+    source_dir: crawlers/indicator_5min
+    depends_on: [postgres]
+    input_table: prices
+    output_table: indicators
+    env:
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 60
+
+  - name: signal-detector
+    type: detector
+    container: fuce-signal-detector
+    description: 异动信号检测
+    source_dir: crawlers/signal_detector
+    depends_on: [postgres]
+    input_table: indicators
+    output_table: signals
+    env:
+      SYMBOL: BTCUSDT
+      INTERVAL_SECONDS: 60
+      SIGNAL_THRESHOLD: 1.0
+
+# 服务类型说明
+service_types:
+  infrastructure: 基础设施服务
+  crawler: 外部数据采集
+  calculator: 数据库内计算
+  detector: 信号检测
