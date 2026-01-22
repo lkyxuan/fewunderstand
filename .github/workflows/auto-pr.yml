@@ -85,15 +85,15 @@ jobs:
           # 创建 PR
           BODY="🤖 Auto-generated PR for branch \`$BRANCH_NAME\`
 
-          Target: \`$BASE_BRANCH\`
+Target: \`$BASE_BRANCH\`
 
-          ---
+---
 
-          ## Checklist
+## Checklist
 
-          - [ ] Tests pass
-          - [ ] Documentation updated (if needed)
-          - [ ] Code follows project style"
+- [ ] Tests pass
+- [ ] Documentation updated (if needed)
+- [ ] Code follows project style"
 
           gh pr create \
             --base "$BASE_BRANCH" \
