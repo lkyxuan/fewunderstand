@@ -1,0 +1,50 @@
+name: Notify Dev Branch Update
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Lark Notification
+        run: |
+          curl -X POST "https://open.larksuite.com/open-apis/bot/v2/hook/9a925d0c-d4d6-4107-90d1-e9a42e8f0111" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "msg_type": "interactive",
+              "card": {
+                "header": {
+                  "title": {
+                    "tag": "plain_text",
+                    "content": "🚀 Dev 分支已更新"
+                  },
+                  "template": "blue"
+                },
+                "elements": [
+                  {
+                    "tag": "div",
+                    "text": {
+                      "tag": "lark_md",
+                      "content": "**仓库**: ${{ github.repository }}\n**分支**: dev\n**提交者**: ${{ github.actor }}\n**提交信息**: ${{ github.event.head_commit.message }}"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actions": [
+                      {
+                        "tag": "button",
+                        "text": {
+                          "tag": "plain_text",
+                          "content": "查看提交"
+                        },
+                        "type": "primary",
+                        "url": "${{ github.event.head_commit.url }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }'
