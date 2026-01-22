@@ -84,27 +84,23 @@ jobs:
           # 首字母大写 (兼容 GNU/BSD sed)
           BRANCH_DESC=$(echo "$BRANCH_DESC" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')
 
-          # 创建 PR (使用 heredoc 避免 YAML 解析问题)
-          BODY=$(cat <<EOFBODY
-🤖 Auto-generated PR for branch \`$BRANCH_NAME\`
-
-**Target branch:** \`$BASE_BRANCH\`
-
----
-
-## Checklist
-
-- [ ] Tests pass
-- [ ] Documentation updated (if needed)
-- [ ] Code follows project style
-EOFBODY
-)
+          # 创建 PR
+          echo "Auto-generated PR for branch $BRANCH_NAME" > /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "**Target:** $BASE_BRANCH" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "---" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "## Checklist" >> /tmp/pr_body.md
+          echo "- [ ] Tests pass" >> /tmp/pr_body.md
+          echo "- [ ] Documentation updated (if needed)" >> /tmp/pr_body.md
+          echo "- [ ] Code follows project style" >> /tmp/pr_body.md
 
           gh pr create \
             --base "$BASE_BRANCH" \
             --head "$BRANCH_NAME" \
             --title "$PR_PREFIX: $BRANCH_DESC" \
-            --body "$BODY" \
+            --body-file /tmp/pr_body.md \
             || echo "Failed to create PR"
 
           echo "PR created successfully!"
