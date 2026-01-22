@@ -7,21 +7,64 @@ on:
     branches: [main, dev]
 
 jobs:
+  # ==================== L1: Lint 检查 ====================
   lint:
+    name: L1 Lint
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lint tools
+        run: |
+          pip install ruff yamllint
+
       - name: Validate docker-compose
         run: docker compose config --quiet
+
+      - name: Run ruff (Python linter)
+        run: ruff check crawlers/ --output-format=github
+
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yml .github/workflows/ docker-compose.yml
 
       - name: Check shell scripts
         run: |
           if ls scripts/*.sh 1> /dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y shellcheck
-            shellcheck scripts/*.sh || true
+            shellcheck scripts/*.sh
           else
-            echo "No shell scripts found in scripts/, skipping shellcheck..."
+            echo "No shell scripts found, skipping..."
+          fi
+
+  # ==================== L2: 单元测试 ====================
+  unit-test:
+    name: L2 Unit Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov
+
+      - name: Run unit tests
+        run: |
+          if [ -d tests/unit/ ]; then
+            pytest tests/unit/ -v --tb=short
+          else
+            echo "No unit tests found, skipping..."
           fi
