@@ -1,15 +1,19 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, and cleanup
+description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, mark issues as ready-for-review, and cleanup. Supports Issue-driven development.
 ---
 
 # Push to Dev
 
 ## Overview
 
-自动提交、重命名分支、推送到远程、合并到 dev 分支的完整流程。
+自动提交、重命名分支、推送到远程、合并到 dev 分支、标记 Issues 为等待审核状态的完整流程。
 
-**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 返回原分支
+**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 标记 Issues ready-for-review → 返回原分支
+
+**与 merge-pr 的区别**：
+- push-to-dev：直接合并，快速迭代，无需 PR
+- merge-pr：通过 PR 合并，有 review 流程
 
 **Announce at start:** "使用 push-to-dev skill 来推送并合并到 dev 分支。"
 
@@ -136,13 +140,45 @@ git add . && git commit && git push origin dev
 
 停止。
 
-### Step 6: 返回原分支
+### Step 6: 标记 Issues 为 Ready for Review (Issue-Driven Development)
+
+合并到 dev 后，将相关 Issues 标记为"等待审核"状态：
+
+```bash
+# 查看当前开放的 task issues
+gh issue list --state open --label task
+
+# 对比本次改动和 issue 描述，识别已完成开发的 issues
+```
+
+**更新 Issue 状态：**
+```bash
+# 移除 in-progress，添加 ready-for-review
+gh issue edit <ISSUE_NUMBER> --remove-label "in-progress" --add-label "ready-for-review"
+
+# 添加评论说明
+gh issue comment <ISSUE_NUMBER> --body "开发完成，已合并到 dev (commit <COMMIT_HASH>)，等待 PR 审核"
+```
+
+**Issue 状态流转：**
+```
+[task] → [task, in-progress] → [task, ready-for-review] → Closed
+ 创建        开发中              push-to-dev              merge-pr
+```
+
+**检查清单：**
+1. 列出本次 commit 涉及的文件
+2. 对比开放的 task issues
+3. 确认哪些 issues 已完成开发
+4. 标记为 ready-for-review（不关闭，等 merge-pr 时关闭）
+
+### Step 7: 返回原分支
 
 ```bash
 git checkout $CURRENT_BRANCH
 ```
 
-### Step 7: 输出结果
+### Step 8: 输出结果
 
 ```
 ✅ 推送并合并完成！
@@ -163,7 +199,8 @@ dev 分支已更新并推送到远程。
 | 3 | 根据 commit 重命名分支 | 自动重命名 |
 | 4 | 推送分支 | 显示错误，停止 |
 | 5 | 合并到 dev | 显示冲突，停止 |
-| 6 | 返回原分支 | - |
+| 6 | 标记 Issues ready-for-review | 等待 PR 审核 |
+| 7 | 返回原分支 | - |
 
 ## Branch Naming Examples
 

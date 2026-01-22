@@ -132,6 +132,18 @@ CREATE TABLE signals (
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_signals_time ON signals(time DESC);
+
+-- 1分钟 OHLC 视图（供前端图表使用）
+CREATE VIEW klines AS
+SELECT
+    time_bucket('1 minute', time) AS time,
+    symbol,
+    first(price, time) AS open,
+    max(price) AS high,
+    min(price) AS low,
+    last(price, time) AS close
+FROM prices
+GROUP BY 1, 2;
 ```
 
 ## Risks / Trade-offs

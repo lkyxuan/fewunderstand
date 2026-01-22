@@ -14,7 +14,7 @@ MVP 前端需要以单页方式呈现三块核心模块：专业图表、可插�
 
 ## Decisions
 - Decision: 单页三栏布局（左侧图表区，上下两张图；右侧信息流）
-- Decision: 数据源统一走 GraphQL 查询与订阅（klines/indicators/signals）
+- Decision: 自有图表与信息流数据走 GraphQL（klines/indicators/signals）；TradingView 使用内置行情数据源
 - Decision: MVP 以 BTC/USDT 固定展示，简化交互
 - Decision: 图表区域显示当前交易对标识，不提供切换功能
 - Decision: 小屏以纵向堆叠方式展示，允许滚动查看三块模块
@@ -113,8 +113,8 @@ frontend/
 
 ### 后端数据源
 - **klines 视图**: 1分钟 K 线连续聚合 (OHLC)，从 prices 自动聚合
-- **GraphQL 端点**: `http://<server>:8080/v1/graphql`
-- **订阅端点**: `ws://<server>:8080/v1/graphql` (WebSocket)
+- **GraphQL 端点**: 由环境变量提供（`NEXT_PUBLIC_HASURA_HTTP_URL`）
+- **订阅端点**: 由环境变量提供（`NEXT_PUBLIC_HASURA_WS_URL`，WebSocket)
 - **匿名访问**: 已启用 `anonymous` 角色，前端无需认证
 
 ### 可用查询
@@ -122,8 +122,11 @@ frontend/
 # K 线数据
 query { klines(where: {symbol: {_eq: "BTCUSDT"}}, order_by: {time: desc}, limit: 100) { time open high low close } }
 
+# 指标数据（MVP 仅用 5 分钟涨跌幅）
+query { indicators(where: {symbol: {_eq: "BTCUSDT"}}, order_by: {time: desc}, limit: 100) { time change_5min_pct } }
+
 # 实时信号订阅
-subscription { signals(order_by: {time: desc}, limit: 10) { time symbol signal_type change_pct } }
+subscription { signals(order_by: {time: desc}, limit: 50) { id time symbol signal_type change_pct } }
 ```
 
 ### 数据刷新频率
@@ -131,3 +134,7 @@ subscription { signals(order_by: {time: desc}, limit: 10) { time symbol signal_t
 - klines: 每 1 分钟自动聚合
 - indicators: 每 60 秒计算
 - signals: 每 60 秒检测
+
+### 交易对与图表约定（MVP）
+- TradingView 符号固定为 `BINANCE:BTCUSDT`
+- 信号列表按 `time` 倒序展示，基于 `id` 去重

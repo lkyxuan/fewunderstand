@@ -11,6 +11,7 @@ MVP 聚焦单一币种（BTC/USDT）的完整信号流程：
 1. **基础设施**
    - Docker Compose 编排（PostgreSQL + TimescaleDB + Hasura）
    - 数据库表结构（prices, indicators, signals）
+   - OHLC 视图（klines，1分钟聚合）
 
 2. **价格信号系统**
    - Binance API 价格采集（每10秒）
@@ -31,3 +32,4 @@ MVP 聚焦单一币种（BTC/USDT）的完整信号流程：
 - [ ] 币安价格写入 `prices` 表
 - [ ] 指标计算写入 `indicators` 表
 - [ ] 信号检测写入 `signals` 表
+- [ ] `klines` 视图可通过 GraphQL 查询 OHLC 数据

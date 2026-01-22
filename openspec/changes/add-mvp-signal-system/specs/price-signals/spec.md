@@ -26,6 +26,17 @@
 - **WHEN** 爬虫服务运行
 - **THEN** 每分钟执行一次指标计算
 
+### Requirement: K 线 OHLC 视图
+系统 SHALL 提供 1 分钟粒度的 OHLC 视图供图表查询。
+
+#### Scenario: 视图可查询
+- **WHEN** 客户端通过 GraphQL 查询 `klines`
+- **THEN** 返回 `time`、`symbol`、`open`、`high`、`low`、`close` 字段
+
+#### Scenario: 聚合粒度
+- **WHEN** 视图基于 `prices` 聚合
+- **THEN** 每条记录代表 1 分钟 K 线区间
+
 ### Requirement: 价格异动信号检测
 系统 SHALL 检测价格异动并生成信号。
 
