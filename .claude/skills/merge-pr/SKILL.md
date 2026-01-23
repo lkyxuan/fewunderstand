@@ -137,48 +137,31 @@ git fetch origin
 git log origin/<target_branch> --oneline -5
 ```
 
-### 6. Close Related Issues (Issue-Driven Development)
+### 6. 调用 issue skill 标记部署完成并关闭
 
-Merge 完成后，检查并关闭相关的 Issues：
+Merge 完成后，调用 `issue` skill 更新相关 Issues 状态。
 
+**操作步骤：**
+
+1. 查看 PR 关联的 issues：
 ```bash
-# 查看 PR 关联的 issues（从 PR body 中提取）
 gh pr view <PR_NUMBER> --json body | grep -oE '#[0-9]+'
-
-# 查看当前开放的 task issues
-gh issue list --state open --label task
-
-# 对比 PR 改动和 issue 描述，识别已完成的 issues
+gh issue list --state open --label "代码完成"
+gh issue list --state open --label "测试完成"
 ```
 
-**关闭 Issue 的方式：**
+2. 对比 PR 改动，识别已完成的 issues
 
+3. 调用 issue skill 的"标记部署完成并关闭"操作：
 ```bash
-# 方式1：PR body 中使用关键词（merge 时自动关闭）
-# Closes #15, #16, #17
+# 添加 部署完成 标签
+gh issue edit <ISSUE_NUMBER> --add-label "部署完成"
 
-# 方式2：手动关闭（如果 PR body 中没写）
-gh issue close <ISSUE_NUMBER> --comment "完成于 PR #<PR_NUMBER>"
+# 关闭并添加评论
+gh issue close <ISSUE_NUMBER> --comment "已部署，完成于 PR #<PR_NUMBER>"
 ```
 
-**检查清单：**
-1. 列出 PR 涉及的所有改动文件
-2. 对比开放的 task issues
-3. 确认哪些 issues 的验证标准已满足
-4. 关闭已完成的 issues，附带 commit/PR 引用
-
-**示例流程：**
-```bash
-# 1. 查看开放的 issues
-gh issue list --state open --label task
-
-# 2. 关闭已完成的 issues
-gh issue close 15 --comment "完成于 PR #21"
-gh issue close 16 --comment "完成于 PR #21"
-
-# 3. 确认关闭状态
-gh issue list --state open --label task
-```
+**参考 `issue` skill 获取完整的标签体系和状态流转规则。**
 
 ## Red Flags - STOP and Report
 

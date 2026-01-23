@@ -154,28 +154,46 @@ git push origin <branch>
 
 > **多人协作必须通过 GitHub Issues 协调，避免重复开发。**
 
+### 中文标签体系
+
+**基础状态（互斥）：**
+| 标签 | 说明 |
+|------|------|
+| `提案` | 新任务/想法，等待认领 |
+| `正在工作` | 有人正在开发 |
+| `验证` | 需要验证或测试 |
+| `讨论` | 需要讨论或澄清 |
+
+**开发阶段（里程碑）：**
+| 标签 | 说明 | 触发时机 |
+|------|------|----------|
+| `代码完成` | 开发完成 | push-to-dev 后 |
+| `测试完成` | 测试通过 | 验证通过后 |
+| `部署完成` | 已部署 | merge-pr 后 |
+
 ### 开始任务前（必做）
 
 1. **检查是否已有相关 Issue**：`gh issue list --state open --search "关键词"`
 2. **如果有 Issue**：
-   - 没有 `in-progress` 标签 → 认领它：`gh issue edit <N> --add-label in-progress`
-   - 有 `in-progress` 标签 → 提醒用户已有人在做，询问是否协调
+   - 是 `提案` 状态 → 认领它：`gh issue edit <N> --remove-label "提案" --add-label "正在工作"`
+   - 是 `正在工作` 状态 → 提醒用户已有人在做，询问是否协调
 3. **如果没有 Issue**：创建并认领
    ```bash
-   gh issue create --title "功能描述" --body "任务详情" --label task
-   gh issue edit <新编号> --add-label in-progress
+   gh issue create --title "功能描述" --body "任务详情" --label "提案"
+   gh issue edit <新编号> --remove-label "提案" --add-label "正在工作"
    ```
 
 ### 完成任务后
 
-- 使用 `push-to-dev` skill → 自动标记 `ready-for-review`
-- 使用 `merge-pr` skill → 自动关闭 Issue
+- 使用 `push-to-dev` skill → 自动标记 `代码完成`
+- 测试通过 → 手动标记 `测试完成`
+- 使用 `merge-pr` skill → 自动标记 `部署完成` 并关闭 Issue
 
 ### Issue 状态流转
 
 ```
-[task] → [task, in-progress] → [task, ready-for-review] → Closed
- 创建        认领开发              push-to-dev            merge-pr
+[提案] → [正在工作] → [代码完成] → [测试完成] → [部署完成] → Closed
+ 创建      认领开发     push-to-dev   测试通过     merge-pr
 ```
 
 <!-- MANUAL ADDITIONS END -->

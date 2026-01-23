@@ -24,10 +24,10 @@ description: Use when you have a tasks.md or todo list and want to create GitHub
 
 | 方向 | 用途 | 命令 |
 |------|------|------|
-| 发布 | tasks.md → Issues | `gh issue create` |
-| 发布 | TodoWrite → Issues | `gh issue create` |
-| 查找 | 查看可用任务 | `gh issue list --label task --state open` |
-| 认领 | 开始做任务 | `gh issue edit <N> --add-label in-progress` |
+| 发布 | tasks.md → Issues | `gh issue create --label "提案"` |
+| 发布 | TodoWrite → Issues | `gh issue create --label "提案"` |
+| 查找 | 查看可用任务 | `gh issue list --label "提案" --state open` |
+| 认领 | 开始做任务 | `gh issue edit <N> --remove-label "提案" --add-label "正在工作"` |
 
 ---
 
@@ -38,14 +38,14 @@ description: Use when you have a tasks.md or todo list and want to create GitHub
 ### 1. 列出所有开放的任务
 
 ```bash
-# 查看所有开放的 task issues
-gh issue list --state open --label task
+# 查看所有待认领的任务（提案状态）
+gh issue list --state open --label "提案"
 
-# 只看未被认领的任务（没有 in-progress 标签）
-gh issue list --state open --label task | grep -v "in-progress"
+# 查看正在进行的任务
+gh issue list --state open --label "正在工作"
 
-# 查看某个 phase 的任务
-gh issue list --state open --label task --label phase-0
+# 查看代码已完成待测试的任务
+gh issue list --state open --label "代码完成"
 ```
 
 ### 2. 查看任务详情
@@ -60,20 +60,23 @@ gh issue view <ISSUE_NUMBER> --json labels --jq '.labels[].name'
 
 ### 3. 任务状态说明
 
-| 标签组合 | 状态 | 含义 |
-|----------|------|------|
-| `task` | 待认领 | 没人在做，可以开始 |
-| `task, in-progress` | 进行中 | 有人正在做 |
-| `task, blocked` | 阻塞 | 有依赖未完成 |
-| `task, ready-for-review` | 等待审核 | 开发完成，等待 merge |
+| 标签 | 状态 | 含义 |
+|------|------|------|
+| `提案` | 待认领 | 新任务，没人在做，可以开始 |
+| `正在工作` | 进行中 | 有人正在开发 |
+| `代码完成` | 代码完成 | 开发完成，等待测试 |
+| `测试完成` | 测试通过 | 测试验证通过，等待部署 |
+| `部署完成` | 已部署 | 已部署到生产环境 |
+| `验证` | 需验证 | 需要验证或测试某个问题 |
+| `讨论` | 需讨论 | 需求不清，需要讨论 |
 
 ## 认领任务
 
 开始做某个任务前，**必须先认领**，避免重复开发：
 
 ```bash
-# 1. 添加 in-progress 标签
-gh issue edit <ISSUE_NUMBER> --add-label "in-progress"
+# 1. 移除 提案，添加 正在工作 标签
+gh issue edit <ISSUE_NUMBER> --remove-label "提案" --add-label "正在工作"
 
 # 2. 添加评论说明你在做
 gh issue comment <ISSUE_NUMBER> --body "开始开发此任务"
@@ -95,9 +98,9 @@ gh issue list --state open --search "新闻 OR news OR crawler"
 ```
 
 **如果找到相关 Issue：**
-- 查看是否有 `in-progress` 标签
+- 查看是否有 `正在工作` 标签
 - 如果有，联系该开发者协调
-- 如果没有，认领后开始开发
+- 如果没有（只有 `提案`），认领后开始开发
 
 ---
 
@@ -154,7 +157,7 @@ gh issue create \
 Hasura Console 可查询 `news` 表
 EOF
 )" \
-  --label "task"
+  --label "提案"
 ```
 
 ### 3. Link Dependencies
@@ -182,25 +185,31 @@ If T2 depends on T1, add to T2's body:
 {verification_criteria}
 ```
 
-## Labels
+## Labels（中文标签体系）
 
-Create these labels if not exist:
-- `task` - From tasks.md
-- `phase-0`, `phase-1`, etc. - Phase tracking
-- `blocked` - Has unmet dependencies
-- `in-progress` - 正在开发中
-- `ready-for-review` - 已完成开发，等待审核
+**基础状态标签（互斥）：**
+- `提案` - 新任务或想法，等待认领
+- `正在工作` - 有人正在开发中
+- `验证` - 需要验证或测试
+- `讨论` - 需要讨论或澄清需求
+
+**开发阶段标签（里程碑）：**
+- `代码完成` - 代码开发完成，push-to-dev 后
+- `测试完成` - 测试验证通过
+- `部署完成` - 已部署到生产环境，merge-pr 后
 
 ## Issue 状态流转 (Issue-Driven Development)
 
 ```
-[task]              创建 issue (tasks-to-issues)
+[提案]              创建 issue (tasks-to-issues)
    ↓
-[task, in-progress] 开始开发
+[正在工作]          认领任务，开始开发
    ↓
-[task, ready-for-review]  push-to-dev 后标记
+[代码完成]          push-to-dev 后标记
    ↓
-Closed              merge-pr 后关闭
+[测试完成]          测试验证通过
+   ↓
+[部署完成] → Closed  merge-pr 后标记并关闭
 ```
 
 ## Common Mistakes
@@ -217,10 +226,10 @@ Closed              merge-pr 后关闭
 
 | Mistake | Fix |
 |---------|-----|
-| 直接开始开发，不检查 Issues | 先 `gh issue list` 查看是否已有人在做 |
-| 不认领就开始做 | 先 `gh issue edit <N> --add-label in-progress` |
-| 做完不更新状态 | 用 push-to-dev 自动标记 ready-for-review |
-| 忽略 blocked 标签 | 先完成依赖任务，或联系相关开发者 |
+| 直接开始开发，不检查 Issues | 先 `gh issue list --label "提案"` 查看是否已有人在做 |
+| 不认领就开始做 | 先 `gh issue edit <N> --remove-label "提案" --add-label "正在工作"` |
+| 做完不更新状态 | 用 push-to-dev 自动标记 `代码完成` |
+| 忽略依赖 | 先完成依赖任务，或联系相关开发者 |
 
 ---
 
@@ -229,21 +238,22 @@ Closed              merge-pr 后关闭
 ## 场景：加入项目，想找任务做
 
 ```bash
-# 1. 查看有什么任务可以做
-gh issue list --state open --label task
+# 1. 查看有什么任务可以做（提案状态）
+gh issue list --state open --label "提案"
 
 # 2. 选择一个感兴趣的任务，查看详情
 gh issue view 15
 
-# 3. 确认没有 in-progress 标签后，认领任务
-gh issue edit 15 --add-label "in-progress"
+# 3. 确认是 提案 状态后，认领任务
+gh issue edit 15 --remove-label "提案" --add-label "正在工作"
 gh issue comment 15 --body "开始开发此任务"
 
 # 4. 创建分支开始开发
 git checkout -b username/feature-name
 
-# 5. 开发完成后，使用 push-to-dev（自动标记 ready-for-review）
-# 6. 创建 PR，使用 merge-pr（自动关闭 Issue）
+# 5. 开发完成后，使用 push-to-dev（自动标记 代码完成）
+# 6. 测试通过后，标记 测试完成
+# 7. 使用 merge-pr 部署（自动标记 部署完成 并关闭 Issue）
 ```
 
 ## 场景：有新功能想法，发布给团队
@@ -254,10 +264,10 @@ gh issue list --state open --search "功能关键词"
 
 # 2. 如果没有，创建新 Issue
 gh issue create \
-  --title "T1: 功能描述" \
+  --title "功能描述" \
   --body "任务详情..." \
-  --label "task"
+  --label "提案"
 
 # 3. 自己要做的话，同时认领
-gh issue edit <新Issue编号> --add-label "in-progress"
+gh issue edit <新Issue编号> --remove-label "提案" --add-label "正在工作"
 ```
