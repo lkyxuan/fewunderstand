@@ -19,6 +19,22 @@ services:
       retries: 10
     restart: unless-stopped
 
+  rsshub:
+    image: diygod/rsshub:latest
+    container_name: fuce-rsshub
+    environment:
+      NODE_ENV: production
+      CACHE_TYPE: memory
+      CACHE_EXPIRE: 300
+    ports:
+      - "127.0.0.1:${RSSHUB_PORT:-1200}:1200"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   hasura:
     image: hasura/graphql-engine:v2.36.0
     container_name: fuce-hasura
@@ -137,6 +153,25 @@ services:
       SYMBOLS: BTCUSDT
       HISTORY_DAYS: 30
       INTERVAL_SECONDS: 60
+    restart: unless-stopped
+
+  news-crawler:
+    build:
+      context: ./crawlers
+      dockerfile: news_crawler/Dockerfile
+    container_name: fuce-news-crawler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: fuce
+      DB_USER: fuce
+      DB_PASSWORD: fuce_dev_password
+      INTERVAL_SECONDS: 300
+      RSSHUB_HOST: rsshub
+      RSSHUB_PORT: 1200
     restart: unless-stopped
 
 volumes:

@@ -150,4 +150,32 @@ git push origin <branch>
 | `/root/fuce/crawlers/` | 爬虫脚本 | 仅通过 rsync 同步 |
 | `/root/fuce/docker-compose.yml` | 服务配置 | 仅通过 rsync 同步 |
 
+## Issue-Driven Development（强制执行）
+
+> **多人协作必须通过 GitHub Issues 协调，避免重复开发。**
+
+### 开始任务前（必做）
+
+1. **检查是否已有相关 Issue**：`gh issue list --state open --search "关键词"`
+2. **如果有 Issue**：
+   - 没有 `in-progress` 标签 → 认领它：`gh issue edit <N> --add-label in-progress`
+   - 有 `in-progress` 标签 → 提醒用户已有人在做，询问是否协调
+3. **如果没有 Issue**：创建并认领
+   ```bash
+   gh issue create --title "功能描述" --body "任务详情" --label task
+   gh issue edit <新编号> --add-label in-progress
+   ```
+
+### 完成任务后
+
+- 使用 `push-to-dev` skill → 自动标记 `ready-for-review`
+- 使用 `merge-pr` skill → 自动关闭 Issue
+
+### Issue 状态流转
+
+```
+[task] → [task, in-progress] → [task, ready-for-review] → Closed
+ 创建        认领开发              push-to-dev            merge-pr
+```
+
 <!-- MANUAL ADDITIONS END -->
