@@ -1,11 +1,22 @@
+"use client";
+
+import { useState } from "react";
 import TradingViewChart from "../components/TradingViewChart";
 import LightweightChart from "../components/LightweightChart";
 import NewsFeed from "../components/NewsFeed";
 import BackendStatus from "../components/BackendStatus";
-import { CHART_CONFIG } from "../lib/config";
+import PairSelector from "../components/PairSelector";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const [currentPair, setCurrentPair] = useState("BTC/USDT");
+
+  // Convert "BTC/USDT" to "BTCUSDT" for queries
+  const symbol = currentPair.replace("/", "");
+  
+  // Convert "BTC/USDT" to "BINANCE:BTCUSDT" for TradingView
+  const tradingViewSymbol = `BINANCE:${symbol}`;
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -14,7 +25,7 @@ export default function Home() {
           <span className={styles.brandName}>signal-render</span>
           <BackendStatus />
         </div>
-        <div className={styles.pairTag}>PAIR · BTC/USDT</div>
+        <PairSelector currentPair={currentPair} onPairChange={setCurrentPair} />
       </header>
 
       <section className={styles.grid}>
@@ -24,7 +35,7 @@ export default function Home() {
               <span>TradingView Pro</span>
               <span className={styles.panelBadge}>Live Market</span>
             </div>
-            <TradingViewChart symbol={CHART_CONFIG.tradingViewSymbol} interval={CHART_CONFIG.interval} />
+            <TradingViewChart symbol={tradingViewSymbol} interval="5" />
           </div>
 
           <div className={styles.panel}>
@@ -32,7 +43,7 @@ export default function Home() {
               <span>Own Kline + Indicator</span>
               <span className={styles.panelBadgeAlt}>Hasura Feed</span>
             </div>
-            <LightweightChart />
+            <LightweightChart symbol={symbol} />
           </div>
         </div>
 

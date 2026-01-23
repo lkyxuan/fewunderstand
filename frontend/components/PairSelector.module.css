@@ -1,0 +1,119 @@
+.container {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.trigger:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.label {
+  color: #888888;
+}
+
+.divider {
+  color: #666666;
+}
+
+.pair {
+  color: #00ff88;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  min-width: 250px;
+  max-width: 350px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.search {
+  width: 100%;
+  padding: 12px;
+  background: #0a0a0a;
+  border: none;
+  border-bottom: 1px solid #333333;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search::placeholder {
+  color: #666666;
+}
+
+.list {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.item {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.item.active {
+  background-color: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+}
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  color: #666666;
+  font-size: 14px;
+}
+
+.customItem {
+  background-color: rgba(0, 255, 136, 0.05);
+  border-left: 2px solid #00ff88;
+}
+
+.customLabel {
+  color: #888888;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.hint {
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.05);
+  border-top: 1px solid #333333;
+  color: #888888;
+  font-size: 12px;
+  text-align: center;
+}
