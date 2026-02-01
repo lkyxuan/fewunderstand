@@ -1,22 +1,21 @@
-# Spec 规格文档
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
 
-**改代码前必须先读 spec！**
+These instructions are for AI assistants working in this project.
 
-功能规格文档在 `openspec/specs/` 目录：
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
 
-```
-openspec/specs/
-├── frontend-dashboard/spec.md   ← 前端仪表盘
-├── infrastructure/spec.md       ← 基础设施
-├── kline-data-collection/spec.md ← K线数据采集
-├── news-crawler/spec.md         ← 新闻爬虫
-└── price-signals/spec.md        ← 价格信号
-```
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
 
-**AI 改代码前：**
-1. `ls openspec/specs/` 查看有哪些功能
-2. `cat openspec/specs/<功能>/spec.md` 阅读相关规格
-3. 按 spec 要求实现
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
 
 # FUCE Development Guidelines
 
@@ -153,28 +152,16 @@ git push origin <branch>
 
 ## Issue-Driven Development（强制执行）
 
-> **多人协作必须通过 GitHub Issues + Projects 协调，避免重复开发。**
+> **多人协作必须通过 GitHub Issues 协调，避免重复开发。**
 >
-> **详细操作流程见 `/project` skill。**
+> **详细操作流程见 `/issue` skill。**
 
 ### 核心流程
 
 ```
-1. 创建 Issue（提案）
-       ↓
-2. /project design → AI 出技术方案
-       ↓
-3. 方案审核（人审 AI 方案，或 AI 审人方案）
-       ↓
-4. /project split → 拆成子 Issues
-       ↓
-5. 认领子 Issue → /project move 正在工作
-       ↓
-6. 开发 → /push-to-dev（创建 PR，Closes #子Issue）
-       ↓
-7. Review → /merge-pr → 子 Issue 自动关闭
-       ↓
-8. 所有子 Issue 完成 → 父 Issue 完成
+提 Issue → 出方案 → 审核方案 → 认领开发 → 代码完成 → 测试 → 部署
+   ↑         ↑         ↑
+ 任何人    AI或人    交叉审核
 ```
 
 ### 关键原则
@@ -184,22 +171,22 @@ git push origin <branch>
 3. **交叉审核**：AI 出方案人审核，人出方案 AI 审核
 4. **小改动可跳过方案**：直接 `提案` → `正在工作`
 
-### Project 看板状态
+### 标签体系
 
-**主流程（7 列）：** `提案` → `待出方案` → `方案审核` → `正在工作` → `代码完成` → `测试完成` → `Done`
+**主流程（互斥）：** `提案` → `待出方案` → `方案审核` → `正在工作` → `代码完成` → `测试完成` → `部署完成`
 
-**看板地址**：https://github.com/users/lkyxuan/projects/2
+**辅助（可叠加）：** `阻塞`（任何阶段遇到问题时）
 
 ### 开始任务前（必做）
 
 1. 检查是否已有相关 Issue：`gh issue list --state open --search "关键词"`
 2. 有 Issue → 认领或协调；没有 → 创建新 Issue
-3. 大改动 → `/project design` 出方案；小改动 → 直接认领
+3. 大改动 → 先出方案；小改动 → 直接认领
 
 ### 相关 Skills
 
-- `/project` - **统一入口**（init、status、move、design、split、link）
-- `/push-to-dev` - 推送代码并创建 PR（关联 Issue）
-- `/merge-pr` - 合并 PR（自动关闭 Issue）
+- `/issue` - Issue 管理（查看、认领、更新状态）
+- `/push-to-dev` - 推送代码并自动标记 `代码完成`
+- `/merge-pr` - 合并 PR 并自动标记 `部署完成`
 
 <!-- MANUAL ADDITIONS END -->
