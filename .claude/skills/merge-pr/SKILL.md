@@ -137,31 +137,27 @@ git fetch origin
 git log origin/<target_branch> --oneline -5
 ```
 
-### 6. 调用 issue skill 标记部署完成并关闭
+### 6. 调用 project skill 标记部署完成
 
-Merge 完成后，调用 `issue` skill 更新相关 Issues 状态。
+Merge 完成后，GitHub 会自动关闭 PR 中 `Closes #xx` 关联的 Issues。
 
-**操作步骤：**
+**自动化流程**：
+1. PR 合并 → GitHub 自动关闭关联的 Issue
+2. Issue 关闭 → Project 自动化将 Item 移到 Done
 
-1. 查看 PR 关联的 issues：
+**如果需要手动操作**：
 ```bash
+# 查看 PR 关联的 issues
 gh pr view <PR_NUMBER> --json body | grep -oE '#[0-9]+'
-gh issue list --state open --label "代码完成"
-gh issue list --state open --label "测试完成"
-```
 
-2. 对比 PR 改动，识别已完成的 issues
+# 调用 /project move 将 Issue 移到 Done
+# 参考 /project skill 的 move 操作
 
-3. 调用 issue skill 的"标记部署完成并关闭"操作：
-```bash
-# 添加 部署完成 标签
-gh issue edit <ISSUE_NUMBER> --add-label "部署完成"
-
-# 关闭并添加评论
+# 关闭 Issue
 gh issue close <ISSUE_NUMBER> --comment "已部署，完成于 PR #<PR_NUMBER>"
 ```
 
-**参考 `issue` skill 获取完整的标签体系和状态流转规则。**
+**参考 `/project` skill 获取完整的状态流转规则。**
 
 ## Red Flags - STOP and Report
 
