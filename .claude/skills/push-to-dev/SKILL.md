@@ -1,19 +1,23 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, mark issues as ready-for-review, and cleanup. Supports Issue-driven development.
+description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge or create PR with issue linking, mark issues as ready-for-review, and cleanup. Supports Issue-driven development.
 ---
 
 # Push to Dev
 
 ## Overview
 
-自动提交、重命名分支、推送到远程、合并到 dev 分支、标记 Issues 为等待审核状态的完整流程。
+自动提交、重命名分支、推送到远程、合并到 dev 分支（或创建 PR）、标记 Issues 为等待审核状态的完整流程。
 
-**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 标记 Issues 代码完成 → 返回原分支
+**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev 或创建 PR → 标记 Issues 代码完成 → 返回原分支
+
+**两种模式**：
+- **直接合并模式**（默认）：快速迭代，无需 PR
+- **PR 模式**：创建 PR 并自动关联 Issue，走 review 流程
 
 **与 merge-pr 的区别**：
-- push-to-dev：直接合并，快速迭代，无需 PR
-- merge-pr：通过 PR 合并，有 review 流程
+- push-to-dev：推送代码，可选直接合并或创建 PR
+- merge-pr：合并已有的 PR
 
 **Announce at start:** "使用 push-to-dev skill 来推送并合并到 dev 分支。"
 
@@ -110,7 +114,16 @@ git push origin $CURRENT_BRANCH
 
 **如果推送失败:** 显示错误信息并停止。
 
-### Step 5: 合并到 dev 分支
+### Step 5: 选择合并模式
+
+**询问用户选择模式**（或根据上下文自动判断）：
+
+| 模式 | 适用场景 |
+|------|----------|
+| 直接合并 | 小改动、个人项目、快速迭代 |
+| 创建 PR | 需要 review、多人协作、正式流程 |
+
+#### 模式 A: 直接合并到 dev
 
 ```bash
 # 获取最新的 dev
@@ -140,29 +153,79 @@ git add . && git commit && git push origin dev
 
 停止。
 
-### Step 6: 调用 issue skill 标记代码完成
+#### 模式 B: 创建 PR 并关联 Issue（推荐）
 
-合并到 dev 后，调用 `issue` skill 更新相关 Issues 状态。
+**1. 查找相关的 Issue：**
+```bash
+# 查找正在工作的 Issue
+ISSUE_NUM=$(gh issue list --state open --label "正在工作" --json number,title -q '.[0].number')
+ISSUE_TITLE=$(gh issue list --state open --label "正在工作" --json number,title -q '.[0].title')
+
+# 如果没找到，搜索分支名相关的 Issue
+if [ -z "$ISSUE_NUM" ]; then
+  ISSUE_NUM=$(gh issue list --state open --search "$CURRENT_BRANCH" --json number -q '.[0].number')
+fi
+```
+
+**2. 创建 PR 并自动关联 Issue：**
+```bash
+# 生成 PR 标题（从最近的 commit 或 Issue 标题）
+PR_TITLE="<type>: <描述>"
+
+# 生成 PR body，包含 Closes 关键词
+if [ -n "$ISSUE_NUM" ]; then
+  PR_BODY="$(cat <<EOF
+## Summary
+<改动描述>
+
+Closes #$ISSUE_NUM
+
+## Test Plan
+- [ ] 本地测试通过
+- [ ] 相关功能验证
+EOF
+)"
+else
+  PR_BODY="$(cat <<EOF
+## Summary
+<改动描述>
+
+## Test Plan
+- [ ] 本地测试通过
+EOF
+)"
+fi
+
+# 创建 PR
+gh pr create --base dev --title "$PR_TITLE" --body "$PR_BODY"
+```
+
+**关键**：PR body 中的 `Closes #xx` 会在 PR 合并时自动关闭 Issue，并触发 Project 自动化将 Issue 移到 Done 列。
+
+### Step 6: 调用 project skill 更新状态
+
+合并到 dev 或创建 PR 后，调用 `/project` skill 更新 Issue 状态。
 
 **操作步骤：**
 
-1. 查看当前正在工作的 issues：
+1. 查找相关 Issue：
 ```bash
-gh issue list --state open --label "正在工作"
+# 按分支名或标签查找
+ISSUE_NUM=$(gh issue list --state open --label "正在工作" --json number -q '.[0].number')
 ```
 
-2. 对比本次改动，识别已完成开发的 issues
-
-3. 调用 issue skill 的"标记代码完成"操作：
+2. 调用 `/project move` 将 Issue 移到「代码完成」：
 ```bash
-# 移除 正在工作，添加 代码完成
-gh issue edit <ISSUE_NUMBER> --remove-label "正在工作" --add-label "代码完成"
-
-# 添加评论说明
-gh issue comment <ISSUE_NUMBER> --body "代码完成，已合并到 dev (commit <COMMIT_HASH>)，等待测试验证"
+# 更新 Project 看板状态
+# 参考 /project skill 的 move 操作
 ```
 
-**参考 `issue` skill 获取完整的标签体系和状态流转规则。**
+3. 添加评论说明：
+```bash
+gh issue comment $ISSUE_NUM --body "代码完成，已合并到 dev (commit <COMMIT_HASH>)，等待测试验证"
+```
+
+**参考 `/project` skill 获取完整的状态流转规则。**
 
 ### Step 7: 返回原分支
 
@@ -190,9 +253,29 @@ dev 分支已更新并推送到远程。
 | 2 | 检查并自动提交 | 自动 commit |
 | 3 | 根据 commit 重命名分支 | 自动重命名 |
 | 4 | 推送分支 | 显示错误，停止 |
-| 5 | 合并到 dev | 显示冲突，停止 |
+| 5a | 直接合并到 dev | 显示冲突，停止 |
+| 5b | 创建 PR + 关联 Issue | 自动添加 `Closes #xx` |
 | 6 | 标记 Issues 代码完成 | 等待测试验证 |
 | 7 | 返回原分支 | - |
+
+## PR 关联 Issue 示例
+
+创建 PR 时自动关联 Issue：
+```bash
+gh pr create --base dev --title "feat: 添加用户认证" --body "$(cat <<'EOF'
+## Summary
+实现用户登录和注册功能
+
+Closes #27
+
+## Test Plan
+- [ ] 登录功能测试
+- [ ] 注册功能测试
+EOF
+)"
+```
+
+**效果**：PR 合并时 → Issue #27 自动关闭 → Project 看板自动移到 Done
 
 ## Branch Naming Examples
 
