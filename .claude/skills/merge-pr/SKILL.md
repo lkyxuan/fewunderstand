@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: Use when merging pull requests. Updates backlog.json status after merge.
+description: 合并 PR。合并后自动更新 backlog.json 任务状态为「待部署」。
 ---
 
 # Merge PR

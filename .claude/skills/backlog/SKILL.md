@@ -1,6 +1,6 @@
 ---
 name: backlog
-description: Use when managing tasks - view, create, move status, assign owner. AI-native alternative to GitHub Projects with 8 statuses.
+description: 任务管理 - 查看、创建、移动状态、认领任务。AI 原生的任务追踪，支持 8 个状态流转。
 ---
 
 # /backlog - AI 原生任务管理

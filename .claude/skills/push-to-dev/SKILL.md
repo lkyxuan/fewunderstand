@@ -1,6 +1,6 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and create PR. Reads task from backlog.json, enforces status check.
+description: 推送代码并创建 PR。从 backlog.json 读取任务，强制检查任务状态必须是「开发中」。
 ---
 
 # Push to Dev
