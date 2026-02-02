@@ -1,19 +1,19 @@
 ---
 name: push-to-dev
-description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge or create PR with issue linking, mark issues as ready-for-review, and cleanup. Supports Issue-driven development.
+description: Use when you need to push current branch and create PR. Enforces Issue status check - Issue MUST be in 开发中 state before pushing.
 ---
 
 # Push to Dev
 
 ## Overview
 
-自动提交、检查 Issue 关联、推送到远程、合并到 dev 或创建 PR 的完整流程。
+自动提交、检查 Issue 状态、推送到远程、创建 PR 的完整流程。
 
-**Core principle:** 检查 Issue → 自动提交 → 推送 → 合并/创建 PR → 更新 Issue 状态
+**强制检查：** Issue 必须在「开发中」状态才能推送，否则拒绝执行。
 
 **与 merge-pr 的区别**：
-- push-to-dev：推送代码，创建/更新 PR，标记 Issue 待测试
-- merge-pr：合并 PR，关闭 Issue，归档 openspec
+- push-to-dev：推送代码，创建 PR，状态 开发中 → 待测试
+- merge-pr：合并 PR，状态 待测试 → 待部署 或 待部署 → Done
 
 **Announce at start:** "使用 push-to-dev skill 来推送代码。"
 
@@ -30,17 +30,13 @@ echo "当前分支: $CURRENT_BRANCH"
 
 如果 `$CURRENT_BRANCH` 是 `dev` 或 `main`：
 ```
-⚠️ 当前在 <branch> 分支，不应直接在此分支开发。
+❌ 当前在 <branch> 分支，不应直接在此分支开发。
 请切换到功能分支后再执行。
 ```
-
 停止。
 
-### Step 2: 检查相关 Issue（调用 project skill）
+### Step 2: 查找关联 Issue
 
-**这是关键步骤：确保每次推送都有对应的 Issue。**
-
-1. 根据分支名和最近 commit 搜索相关 Issue：
 ```bash
 # 从分支名提取关键词
 BRANCH_KEYWORDS=$(echo $CURRENT_BRANCH | sed 's/[^a-zA-Z0-9]/ /g')
@@ -52,49 +48,66 @@ gh issue list --state open --search "$BRANCH_KEYWORDS"
 git log --oneline -5 | grep -oE '#[0-9]+'
 ```
 
-2. **如果找到相关 Issue：**
-   - 确认 Issue 状态是否为 `开发中`
-   - 如果不是，询问是否要认领（调用 `/project claim`）
+**如果没有找到关联 Issue：**
+```
+❌ 没有找到关联的 Issue。
 
-3. **如果没有找到相关 Issue：**
-   ```
-   ⚠️ 没有找到与此次更改相关的 Issue。
+根据 Issue-Driven Development 原则，必须先有 Issue 才能推送代码。
 
-   根据 Issue-Driven Development 原则，每次代码更改都应该关联到一个 Issue。
+请先执行：
+1. /project create "问题描述"  → 创建 Issue
+2. /project claim <N>         → 认领（问题 → 待定方案）
+3. /project idea <N>          → 写方案（待定方案 → 待出设计）
+4. /project design <N>        → 出设计（待出设计 → 设计审核）
+5. /project approve <N>       → 审核通过（设计审核 → 开发中）
+6. 然后才能 /push-to-dev
+```
+停止。
 
-   请选择：
-   1. 创建新 Issue 描述这次更改解决的问题
-   2. 关联到现有 Issue（输入 Issue 编号）
-   3. 跳过（不推荐）
-   ```
+### Step 3: 强制检查 Issue 状态（核心）
 
-   如果选择创建 Issue，调用 project skill：
-   ```bash
-   # 从 commit 消息生成 Issue 标题和描述
-   COMMIT_MSG=$(git log -1 --pretty=%s)
-   COMMIT_BODY=$(git log -1 --pretty=%b)
+```bash
+# 获取 Issue 当前标签
+gh issue view <ISSUE_NUMBER> --json labels --jq '[.labels[].name]'
+```
 
-   gh issue create \
-     --title "$COMMIT_MSG" \
-     --body "$(cat <<EOF
-   ## 问题描述
+**状态检查规则：**
 
-   $COMMIT_BODY
+| Issue 当前状态 | 是否允许 push | 处理 |
+|---------------|--------------|------|
+| `开发中` | ✅ 允许 | 继续流程 |
+| `问题` | ❌ 拒绝 | 提示需要先完成 claim → idea → design → approve |
+| `待定方案` | ❌ 拒绝 | 提示需要先完成 idea → design → approve |
+| `待出设计` | ❌ 拒绝 | 提示需要先完成 design → approve |
+| `设计审核` | ❌ 拒绝 | 提示需要先完成 approve |
+| `待测试` | ❌ 拒绝 | 已经推送过了，应该等测试或 merge |
+| `待部署` | ❌ 拒绝 | 已经测试通过了，应该 merge 到 main |
+| `Done` | ❌ 拒绝 | Issue 已关闭 |
 
-   ## 相关更改
+**拒绝时的提示模板：**
 
-   分支: $CURRENT_BRANCH
-   EOF
-   )" \
-     --label "问题"
+```
+❌ Issue #<N> 当前状态是「<当前状态>」，不能直接推送代码。
 
-   # 然后认领 Issue，设置为开发中
-   gh issue edit <NEW_ISSUE_NUMBER> --remove-label "问题" --add-label "开发中"
-   ```
+必须先完成以下步骤：
+<根据当前状态列出需要完成的步骤>
 
-4. **记录关联的 Issue 编号：** `RELATED_ISSUE=<number>`
+或者调用 /project 查看当前状态并更新。
+```
 
-### Step 3: 检查并自动提交
+**示例 - Issue 在「待出设计」：**
+```
+❌ Issue #37 当前状态是「待出设计」，不能直接推送代码。
+
+必须先完成以下步骤：
+1. /project design 37   → 设计审核（用 openspec 出设计后执行）
+2. /project approve 37  → 开发中（审核通过后执行）
+3. 然后才能 /push-to-dev
+
+或者调用 /project 查看当前状态并更新。
+```
+
+### Step 4: 检查并自动提交
 
 ```bash
 git status --porcelain
@@ -108,7 +121,7 @@ git diff --stat
 git diff
 ```
 
-2. 分析变更，生成合适的 commit 消息（遵循仓库的 commit 风格）
+2. 分析变更，生成合适的 commit 消息
 
 3. 添加并提交（包含 Issue 引用）：
 ```bash
@@ -124,57 +137,35 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 
 **如果没有更改也没有新 commit:** 提示无内容可推送，停止。
 
-### Step 4: 根据 commit 内容重命名分支
+### Step 5: 根据 commit 内容重命名分支
 
-**始终检查分支名是否反映当前工作内容。**
+分支名应符合 `用户名/功能描述` 格式。
 
-分支名应符合 `用户名/功能描述` 格式，且功能描述必须反映实际改动内容。
-
-1. 获取 git 用户名：
 ```bash
 GIT_USER=$(git config user.name | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
-```
-
-2. 从最近的 commit 消息提取功能描述，转换为英文短横线格式
-
-3. 如需重命名：
-```bash
 NEW_BRANCH="${GIT_USER}/${FEATURE_DESC}"
 git branch -m "$CURRENT_BRANCH" "$NEW_BRANCH"
-CURRENT_BRANCH="$NEW_BRANCH"
-echo "分支已重命名: <旧名> → <新名>"
 ```
 
-### Step 5: 推送当前分支
+### Step 6: 推送当前分支
 
 ```bash
 git push origin $CURRENT_BRANCH -u
 ```
 
-**如果推送失败:** 显示错误信息并停止。
+### Step 7: 创建或更新 PR
 
-### Step 6: 创建或更新 PR
-
-**检查是否已有 PR：**
-```bash
-gh pr list --head $CURRENT_BRANCH --state open
-```
-
-**如果没有 PR，创建 PR：**
 ```bash
 gh pr create \
   --title "<commit 消息>" \
   --body "$(cat <<EOF
 ## Summary
-
 <变更摘要>
 
 ## Related Issue
-
 Closes #$RELATED_ISSUE
 
 ## Test Plan
-
 - [ ] 功能测试
 - [ ] 回归测试
 
@@ -185,28 +176,13 @@ EOF
   --base dev
 ```
 
-**如果已有 PR：** 更新 PR 描述确保关联了 Issue。
+### Step 8: 更新 Issue 状态（调用 project skill）
 
-### Step 7: 更新 Issue 状态（调用 project skill）
-
-推送完成后，更新 Issue 状态为 `待测试`：
-
-```bash
-# 开发中 → 待测试
-gh issue edit $RELATED_ISSUE --remove-label "开发中" --add-label "待测试"
-
-# 添加评论
-COMMIT_HASH=$(git rev-parse --short HEAD)
-gh issue comment $RELATED_ISSUE --body "代码完成，已推送 PR。
-
-- 分支: $CURRENT_BRANCH
-- Commit: $COMMIT_HASH
-- PR: <PR_URL>
-
-等待测试验证。"
+```
+/project move $RELATED_ISSUE 待测试
 ```
 
-### Step 8: 输出结果
+### Step 9: 输出结果
 
 ```
 ✅ 推送完成！
@@ -217,38 +193,35 @@ PR: <pr_url>
 状态: 开发中 → 待测试
 
 下一步：
-- 测试验证后，使用 /merge-pr 合并
+- 测试验证后，使用 /merge-pr 合并到 dev
 ```
 
-## 与 project skill 的协作
+## 状态检查速查表
 
-| push-to-dev 步骤 | 调用 project skill 功能 |
-|-----------------|------------------------|
-| Step 2: 检查 Issue | `status`、`create`、`claim` |
-| Step 7: 更新状态 | `move <N> 待测试` |
+```
+要 push 代码，Issue 必须在「开发中」
 
-## Quick Reference
+如果 Issue 在其他状态，需要先完成：
 
-| 步骤 | 操作 | 失败处理 |
-|------|------|---------|
-| 1 | 检查当前分支 | 停止，不允许在 dev/main 操作 |
-| 2 | 检查相关 Issue | 没有则创建 |
-| 3 | 检查并自动提交 | 自动 commit |
-| 4 | 重命名分支 | 自动重命名 |
-| 5 | 推送分支 | 显示错误，停止 |
-| 6 | 创建/更新 PR | 关联 Issue |
-| 7 | 更新 Issue 状态 | 开发中 → 待测试 |
+问题       → claim → idea → design → approve → 开发中 → 可以 push
+待定方案   →         idea → design → approve → 开发中 → 可以 push
+待出设计   →                design → approve → 开发中 → 可以 push
+设计审核   →                         approve → 开发中 → 可以 push
+开发中     →                                            可以 push ✅
+待测试     → 不能 push（已经推送过了）
+待部署     → 不能 push（应该 merge 到 main）
+Done       → 不能 push（Issue 已关闭）
+```
 
 ## Red Flags
 
 **Never:**
+- 跳过状态检查直接推送
 - 在 dev 或 main 分支直接执行
-- 推送没有关联 Issue 的代码（除非明确跳过）
+- 推送没有关联 Issue 的代码
 - Force push 到 dev 分支
-- 忽略合并冲突
 
 **Always:**
-- 确保每次推送都有对应的 Issue
-- 自动提交未暂存的更改
+- Issue 必须在「开发中」才能推送
+- 状态不对时，先用 /project 更新状态
 - PR 描述中使用 `Closes #issue` 关联 Issue
-- 更新 Issue 状态为待测试
