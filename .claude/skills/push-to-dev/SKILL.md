@@ -54,7 +54,7 @@ git log --oneline -5 | grep -oE '#[0-9]+'
 
 2. **如果找到相关 Issue：**
    - 确认 Issue 状态是否为 `开发中`
-   - 如果不是，询问是否要认领（调用 `/project claim`）
+   - 如果不是，调用 `/project claim <N>` 认领
 
 3. **如果没有找到相关 Issue：**
    ```
@@ -68,29 +68,13 @@ git log --oneline -5 | grep -oE '#[0-9]+'
    3. 跳过（不推荐）
    ```
 
-   如果选择创建 Issue，调用 project skill：
-   ```bash
-   # 从 commit 消息生成 Issue 标题和描述
-   COMMIT_MSG=$(git log -1 --pretty=%s)
-   COMMIT_BODY=$(git log -1 --pretty=%b)
-
-   gh issue create \
-     --title "$COMMIT_MSG" \
-     --body "$(cat <<EOF
-   ## 问题描述
-
-   $COMMIT_BODY
-
-   ## 相关更改
-
-   分支: $CURRENT_BRANCH
-   EOF
-   )" \
-     --label "问题"
-
-   # 然后认领 Issue，设置为开发中
-   gh issue edit <NEW_ISSUE_NUMBER> --remove-label "问题" --add-label "开发中"
+   **如果选择创建 Issue，调用 project skill：**
    ```
+   /project create "<commit 标题>"
+   /project claim <NEW_ISSUE_NUMBER>
+   ```
+
+   project skill 会自动创建 Issue 并设置为「开发中」状态。
 
 4. **记录关联的 Issue 编号：** `RELATED_ISSUE=<number>`
 
@@ -189,22 +173,18 @@ EOF
 
 ### Step 7: 更新 Issue 状态（调用 project skill）
 
-推送完成后，更新 Issue 状态为 `待测试`：
+**所有状态变更都通过 project skill 完成。**
 
-```bash
-# 开发中 → 待测试
-gh issue edit $RELATED_ISSUE --remove-label "开发中" --add-label "待测试"
+推送完成后，调用 project skill 更新状态：
 
-# 添加评论
-COMMIT_HASH=$(git rev-parse --short HEAD)
-gh issue comment $RELATED_ISSUE --body "代码完成，已推送 PR。
-
-- 分支: $CURRENT_BRANCH
-- Commit: $COMMIT_HASH
-- PR: <PR_URL>
-
-等待测试验证。"
 ```
+/project move $RELATED_ISSUE 待测试
+```
+
+project skill 会自动：
+- 移除「开发中」标签
+- 添加「待测试」标签
+- 添加评论说明状态变更
 
 ### Step 8: 输出结果
 

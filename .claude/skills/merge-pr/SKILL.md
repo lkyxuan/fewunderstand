@@ -1,19 +1,21 @@
 ---
 name: merge-pr
-description: Use when merging pull requests to dev branch, especially multi-contributor PRs or security-sensitive changes. Triggers when user asks to merge, approve, or complete a PR. Supports Issue-driven development by closing related issues after merge.
+description: Use when merging pull requests. Merge to dev marks Issue as 待部署; merge to main closes Issue. Triggers when user asks to merge, approve, or complete a PR.
 ---
 
-# Merge PR to Dev
+# Merge PR
 
 ## Overview
 
-通过 PR 合并代码到 dev 分支，包含安全检查、Issue 关闭和 openspec 归档。
+通过 PR 合并代码，包含安全检查和 Issue 状态更新。
 
-**目标分支**：dev（开发分支）
+**状态流转规则**：
+- **merge 到 dev**：Issue 从「待测试」→「待部署」（不关闭）
+- **merge 到 main**：Issue 从「待部署」→「Done」（关闭）
 
 **与 push-to-dev 的区别**：
 - push-to-dev：推送代码，创建 PR，标记 Issue 待测试
-- merge-pr：合并 PR，关闭 Issue，归档 openspec
+- merge-pr：合并 PR，更新 Issue 状态（待部署或关闭）
 
 **Announce at start:** "使用 merge-pr skill 来合并 PR。"
 
@@ -87,28 +89,31 @@ git fetch origin
 git log origin/dev --oneline -5
 ```
 
-### Step 5: 关闭相关 Issue（调用 project skill）
+### Step 5: 更新相关 Issue 状态（调用 project skill）
 
-Merge 完成后，更新相关 Issues 状态为 Done 并关闭。
+**所有状态变更都通过 project skill 完成。**
 
-**操作步骤：**
-
-1. 查看 PR 关联的 Issues：
+1. 查看 PR 关联的 Issues 和目标分支：
 ```bash
+# 获取 PR 的目标分支
+gh pr view <PR_NUMBER> --json baseRefName --jq '.baseRefName'
+
 # 从 PR body 提取 Issue 引用
 gh pr view <PR_NUMBER> --json body | grep -oE '#[0-9]+'
-
-# 查看待测试和待部署的 Issues
-gh issue list --state open --label "待测试"
-gh issue list --state open --label "待部署"
 ```
 
-2. 关闭相关 Issues：
-```bash
-# 待测试/待部署 → Done（关闭）
-gh issue edit <ISSUE_NUMBER> --add-label "部署完成"
-gh issue close <ISSUE_NUMBER> --comment "已部署完成，PR #<PR_NUMBER> 已合并到 dev。"
+2. 调用 project skill 更新状态：
+
+**如果 merge 到 dev：**
 ```
+/project move <ISSUE_NUMBER> 待部署
+```
+
+**如果 merge 到 main：**
+```
+/project move <ISSUE_NUMBER> Done
+```
+（project skill 的 move Done 会自动关闭 Issue）
 
 ### Step 6: 归档 openspec（如有）
 
@@ -124,24 +129,37 @@ openspec archive <change-id> --yes
 
 ### Step 7: 输出结果
 
+**如果 merge 到 dev：**
 ```
 ✅ PR 合并完成！
 
 PR: #<number>
 合并到: dev
+Issue 状态: 待测试 → 待部署
+
+下一步：部署到生产环境后，merge 到 main 关闭 Issue
+```
+
+**如果 merge 到 main：**
+```
+✅ PR 合并完成！
+
+PR: #<number>
+合并到: main
 关闭的 Issues: #<issue1>, #<issue2>
 
 已完成：
-- PR 已合并
+- PR 已合并到生产
 - Issue 已关闭（状态 → Done）
 - openspec 已归档（如有）
 ```
 
 ## 与 project skill 的协作
 
-| merge-pr 步骤 | 调用 project skill 功能 |
-|--------------|------------------------|
-| Step 5: 关闭 Issue | `move <N> Done` + 关闭 |
+| merge-pr 步骤 | 目标分支 | 调用 project skill 功能 |
+|--------------|---------|------------------------|
+| Step 5 | dev | `move <N> 待部署` |
+| Step 5 | main | `move <N> Done` + 关闭 |
 
 ## Security Red Flags - STOP and Report
 
@@ -170,7 +188,12 @@ gh pr view <N>                    # Review PR
 gh pr checks <N>                  # Verify CI
 gh pr diff <N> | grep -i secret   # Security scan
 gh pr merge <N> --merge           # Execute merge
-gh issue close <N> --comment "完成于 PR #<N>"  # Close issues
+
+# 如果 merge 到 dev
+gh issue edit <N> --remove-label "待测试" --add-label "待部署"
+
+# 如果 merge 到 main
+gh issue close <N> --comment "完成于 PR #<N>"
 openspec archive <change-id> --yes  # Archive openspec
 ```
 
@@ -179,7 +202,7 @@ openspec archive <change-id> --yes  # Archive openspec
 ```
 push-to-dev 完成后：Issue 在 待测试
            ↓
-测试通过后：手动移到 待部署
+merge 到 dev：Issue 移到 待部署（不关闭）
            ↓
-merge-pr 完成后：Issue 关闭（Done）
+merge 到 main：Issue 关闭（Done）
 ```
