@@ -57,45 +57,6 @@
                 }
               }
             ]
-          },
-          {
-            "table": {"name": "klines_raw", "schema": "public"},
-            "select_permissions": [
-              {
-                "role": "anonymous",
-                "permission": {
-                  "columns": "*",
-                  "filter": {},
-                  "allow_aggregations": true
-                }
-              }
-            ]
-          },
-          {
-            "table": {"name": "klines_5m", "schema": "public"},
-            "select_permissions": [
-              {
-                "role": "anonymous",
-                "permission": {
-                  "columns": "*",
-                  "filter": {},
-                  "allow_aggregations": true
-                }
-              }
-            ]
-          },
-          {
-            "table": {"name": "news", "schema": "public"},
-            "select_permissions": [
-              {
-                "role": "anonymous",
-                "permission": {
-                  "columns": "*",
-                  "filter": {},
-                  "allow_aggregations": true
-                }
-              }
-            ]
           }
         ],
         "configuration": {

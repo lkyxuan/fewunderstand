@@ -1,15 +1,17 @@
 ---
 name: push-to-dev
-description: 推送代码并创建 PR。从 backlog.json 读取任务，强制检查任务状态必须是「开发中」。
+description: Use when you need to push current branch and merge to dev - handles auto-commit, branch renaming, push, merge, and cleanup
 ---
 
 # Push to Dev
 
-自动提交、推送到远程、创建 PR 的完整流程。
+## Overview
 
-**数据源：** `docs/backlog.json`（AI 原生，替代 GitHub Projects）
+自动提交、重命名分支、推送到远程、合并到 dev 分支的完整流程。
 
-**Announce at start:** "使用 push-to-dev skill 来推送代码。"
+**Core principle:** 自动提交 → 根据 commit 重命名分支 → 推送 → 合并到 dev → 返回原分支
+
+**Announce at start:** "使用 push-to-dev skill 来推送并合并到 dev 分支。"
 
 ## The Process
 
@@ -17,148 +19,172 @@ description: 推送代码并创建 PR。从 backlog.json 读取任务，强制�
 
 ```bash
 CURRENT_BRANCH=$(git branch --show-current)
+echo "当前分支: $CURRENT_BRANCH"
 ```
 
-如果在 `dev` 或 `main`：
+**检查是否在 dev 或 main 分支:**
+
+如果 `$CURRENT_BRANCH` 是 `dev` 或 `main`：
 ```
-❌ 当前在 <branch> 分支，不应直接在此分支开发。
+⚠️ 当前在 <branch> 分支，不应直接在此分支开发。
+请切换到功能分支后再执行。
 ```
+
 停止。
 
-### Step 2: 读取 backlog.json，找到当前任务
-
-```python
-import json
-backlog = json.load(open('docs/backlog.json'))
-
-# 找到 owner=@claude 且 status=developing 的任务
-my_tasks = [t for t in backlog['tasks']
-            if t['owner'] == '@claude' and t['status'] == 'developing']
-
-if not my_tasks:
-    # 尝试从分支名匹配任务
-    branch_keywords = current_branch.replace('-', ' ').replace('/', ' ')
-    matched = [t for t in backlog['tasks']
-               if any(kw in t['title'].lower() for kw in branch_keywords.split())]
-```
-
-**如果找到任务：**
-```
-找到关联任务: [auth-001] 用户无法登录
-状态: 💻 开发中
-```
-
-**如果没找到：**
-```
-❌ 没有找到关联任务。
-
-请先创建任务：
-/backlog add "任务描述"
-/backlog claim <id>
-/backlog move <id> developing
-```
-
-### Step 3: 检查状态（必须是 developing）
-
-```python
-if task['status'] != 'developing':
-    print(f"❌ 任务 [{task['id']}] 状态是 {task['status']}，不是 developing")
-    print("请先: /backlog move <id> developing")
-    return
-```
-
-### Step 4: 检查并自动提交
+### Step 2: 检查并自动提交
 
 ```bash
 git status --porcelain
 ```
 
-如果有未提交的更改：
+**如果有未提交的更改，自动提交：**
+
+1. 查看变更内容：
+```bash
+git diff --stat
+git diff
+```
+
+2. 分析变更，生成合适的 commit 消息（遵循仓库的 commit 风格）
+
+3. 添加并提交：
 ```bash
 git add <相关文件>
 git commit -m "<type>: <描述>
 
-Implements: <task-id>
+<详细说明如有必要>
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ```
 
-### Step 5: 推送
+**如果没有更改也没有新 commit:** 提示无内容可推送，停止。
+
+### Step 3: 根据 commit 内容重命名分支
+
+**始终检查分支名是否反映当前工作内容。**
+
+分支名应符合 `用户名/功能描述` 格式，且功能描述必须反映实际改动内容。
+
+1. 获取 git 用户名：
+```bash
+GIT_USER=$(git config user.name | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+```
+
+2. 从最近的 commit 消息提取功能描述，转换为英文短横线格式：
+```bash
+COMMIT_MSG=$(git log -1 --pretty=%s)
+# 分析 commit 消息，提取核心功能
+# 例如：
+# "feat: 完善 Hasura GraphQL 配置支持前端 MVP" -> "hasura-graphql-frontend-mvp"
+# "fix: 修复飞书通知 JSON 格式问题" -> "fix-feishu-notify-json"
+# "refactor: 简化 CI 流程" -> "simplify-ci"
+```
+
+3. 检查当前分支名是否已经正确反映功能：
+   - 如果分支名像 `lkyxuan/salvador`、`lkyxuan/test`、`feature-1` 等通用名称 → 需要重命名
+   - 如果分支名已经反映功能如 `lkyxuan/hasura-graphql-config` → 可以保留
+
+4. 如需重命名：
+```bash
+NEW_BRANCH="${GIT_USER}/${FEATURE_DESC}"
+git branch -m "$CURRENT_BRANCH" "$NEW_BRANCH"
+CURRENT_BRANCH="$NEW_BRANCH"
+echo "分支已重命名: <旧名> → <新名>"
+```
+
+**命名规则：**
+- 用户名：从 git config user.name 获取，转小写，空格变连字符
+- 功能描述：从 commit 消息核心内容提取，使用英文短横线连接
+- 保持简洁：3-5 个单词，如 `add-klines-view`、`fix-hasura-metadata`
+
+### Step 4: 推送当前分支
 
 ```bash
-git push origin $CURRENT_BRANCH -u
+git push origin $CURRENT_BRANCH
 ```
 
-### Step 6: 创建 PR
+**如果推送失败:** 显示错误信息并停止。
+
+### Step 5: 合并到 dev 分支
 
 ```bash
-gh pr create \
-  --title "<commit 消息>" \
-  --body "$(cat <<EOF
-## Summary
-<变更摘要>
+# 获取最新的 dev
+git fetch origin dev
 
-## Task
-Implements: $TASK_ID
-- Title: $TASK_TITLE
-- Why: $TASK_WHY
+# 切换到 dev
+git checkout dev
 
-## Test Plan
-- [ ] 功能测试
-- [ ] 回归测试
+# 拉取最新
+git pull origin dev
 
----
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)" \
-  --base dev
+# 合并功能分支
+git merge $CURRENT_BRANCH --no-edit
+
+# 推送 dev
+git push origin dev
 ```
 
-### Step 7: 更新 backlog.json 状态
+**如果合并有冲突:**
+```
+合并冲突！请手动解决以下文件的冲突：
+<冲突文件列表>
 
-```python
-task['status'] = 'testing'
-task['pr'] = pr_url
-save_backlog()
-git_commit("chore: update backlog - task testing")
+解决后运行:
+git add . && git commit && git push origin dev
 ```
 
-### Step 8: 输出
+停止。
+
+### Step 6: 返回原分支
+
+```bash
+git checkout $CURRENT_BRANCH
+```
+
+### Step 7: 输出结果
 
 ```
-✅ 推送完成！
+✅ 推送并合并完成！
 
 分支: <branch>
-任务: [<id>] <title>
-PR: <pr_url>
-状态: developing → testing
+合并到: dev
+最新提交: <commit hash> <commit message>
 
-下一步：
-- 测试通过后: /backlog move <id> deploying
-- 部署完成后: /backlog done <id>
+dev 分支已更新并推送到远程。
 ```
 
-## 状态检查速查表
+## Quick Reference
 
-```
-要 push 代码，任务必须在 developing 状态
+| 步骤 | 操作 | 失败处理 |
+|------|------|---------|
+| 1 | 检查当前分支 | 停止，不允许在 dev/main 操作 |
+| 2 | 检查并自动提交 | 自动 commit |
+| 3 | 根据 commit 重命名分支 | 自动重命名 |
+| 4 | 推送分支 | 显示错误，停止 |
+| 5 | 合并到 dev | 显示冲突，停止 |
+| 6 | 返回原分支 | - |
 
-如果任务在其他状态：
+## Branch Naming Examples
 
-problem    → /backlog move <id> planning → ... → developing
-planning   → /backlog move <id> designing → ... → developing
-designing  → /backlog move <id> reviewing → developing
-reviewing  → /backlog move <id> developing ✅
-developing → 可以 push ✅
-testing    → 已经推送过了
-deploying  → 应该部署了
-done       → 任务已完成
-```
+| Commit 消息 | 分支名 |
+|------------|--------|
+| feat: 完善 Hasura GraphQL 配置 | `lkyxuan/hasura-graphql-config` |
+| fix: 修复飞书通知 JSON 格式 | `lkyxuan/fix-feishu-notify-json` |
+| feat: 添加 K 线连续聚合视图 | `lkyxuan/add-klines-view` |
+| refactor: 简化 CI 流程 | `lkyxuan/simplify-ci` |
+| feat: 爬虫支持多币种采集 | `lkyxuan/multi-coin-crawler` |
 
-## 与 GitHub 的关系
+## Red Flags
 
-- **backlog.json** = 任务管理（AI 原生）
-- **GitHub PR** = 代码 review（保留）
-- **GitHub Issues** = 外部用户报 bug（可选同步到 backlog）
+**Never:**
+- 在 dev 或 main 分支直接执行
+- 使用通用分支名如 `test`、`feature`、`dev2`
+- Force push 到 dev 分支
+- 忽略合并冲突
 
-PR 不再强制关联 GitHub Issue，而是引用 backlog task ID。
+**Always:**
+- 自动提交未暂存的更改
+- 根据实际改动内容命名分支
+- 合并后返回原分支
+- 显示操作结果
