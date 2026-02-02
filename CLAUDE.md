@@ -150,64 +150,63 @@ git push origin <branch>
 | `/root/fuce/crawlers/` | 爬虫脚本 | 仅通过 rsync 同步 |
 | `/root/fuce/docker-compose.yml` | 服务配置 | 仅通过 rsync 同步 |
 
-## Issue-Driven Development（强制执行）
+## 任务管理（AI 原生）
 
-> **多人协作必须通过 GitHub Issues + Projects 协调，避免重复开发。**
+> **数据源：** `docs/backlog.json`（替代 GitHub Projects）
 >
-> **详细操作流程见 `/project` skill。**
+> **详细操作流程见 `/backlog` skill。**
 
 ### 模块分工
 
 | 模块 | 职责 |
 |------|------|
-| **project** | 项目管理（看板、Issue 状态、进度追踪） |
+| **backlog** | 任务管理（8 个状态、进度追踪） |
 | **openspec** | 技术设计（proposal、design、tasks） |
 
-### 看板状态（8 列）
+### 8 个状态
 
-| 状态 | 含义 | 谁做 |
-|------|------|------|
-| `问题` | 发现问题/提出需求 | 任何人 |
-| `待定方案` | 需要人想解决思路 | 人 |
-| `待出设计` | 有思路了，需要详细设计 | AI (openspec) |
-| `设计审核` | 设计完成，等待审核 | 人审 AI |
-| `开发中` | 按 tasks.md 开发 | AI/人 |
-| `待测试` | 代码完成，等待测试 | 人/QA |
-| `待部署` | 测试通过，等待部署 | 运维/人 |
-| `Done` | 已部署上线 | - |
-
-**辅助标签：** `阻塞`（任何阶段遇到问题时）
+| 状态 | ID | 含义 | 谁做 |
+|------|-----|------|------|
+| ❓ 问题 | `problem` | 发现问题/提出需求 | 任何人 |
+| 🤔 待定方案 | `planning` | 需要人想解决思路 | 人 |
+| 📐 待出设计 | `designing` | 有思路了，需要详细设计 | AI (openspec) |
+| 👀 设计审核 | `reviewing` | 设计完成，等待审核 | 人审 AI |
+| 💻 开发中 | `developing` | 按 tasks.md 开发 | AI/人 |
+| 🧪 待测试 | `testing` | 代码完成，等待测试 | 人/QA |
+| 🚀 待部署 | `deploying` | 测试通过，等待部署 | 运维/人 |
+| ✅ Done | `done` | 已部署上线 | - |
 
 ### 核心流程
 
 ```
-问题
- │
- ├─ 小改动 ──────────────────→ 开发中 → 待测试 → 待部署 → Done
- │
- └─ 大改动 → 待定方案 → 待出设计 → 设计审核 → 开发中 → 待测试 → 待部署 → Done
-              (人想思路)  (AI出设计)  (人审核)
+/backlog add "问题描述"     → 创建任务（problem）
+/backlog claim <id>         → 认领（problem → planning）
+/backlog move <id> designing → 写完思路（planning → designing）
+/backlog move <id> reviewing → AI 出完设计（designing → reviewing）
+/backlog move <id> developing → 审核通过（reviewing → developing）
+/push-to-dev                 → 代码完成（developing → testing，自动）
+/merge-pr                    → PR 合并（testing → deploying，自动）
+/backlog done <id>           → 部署完成（deploying → done）
 ```
 
 ### 关键原则
 
-1. **问题任何人都可以提**（用户、开发者、AI）
-2. **人先出思路**：大改动先在 Issue 里写解决思路
+1. **任务在 backlog.json**：AI 直接读写，无 API 延迟
+2. **人先出思路**：大改动先写解决思路
 3. **AI 出详细设计**：用 openspec 产出 proposal/design/tasks
 4. **人审核设计**：确保方向正确再开发
-5. **小改动可跳过**：直接 `问题` → `开发中`
 
 ### 开始任务前（必做）
 
-1. 检查是否已有相关 Issue：`gh issue list --state open --search "关键词"`
-2. 有 Issue → 认领或协调；没有 → 创建新 Issue
+1. 查看待办：`/backlog`
+2. 有任务 → 认领；没有 → `/backlog add "描述"`
 3. 大改动 → 人出思路 → AI 出设计；小改动 → 直接开发
 
 ### 相关 Skills
 
-- `/project` - 项目管理（看板、Issue 状态、同步 openspec 任务）
+- `/backlog` - 任务管理（查看、创建、移动状态）
 - `openspec` - 技术设计（proposal、design、tasks）
-- `/push-to-dev` - 推送代码并自动标记 `待测试`
-- `/merge-pr` - 合并 PR 并自动关闭 Issue
+- `/push-to-dev` - 推送代码（developing → testing）
+- `/merge-pr` - 合并 PR（testing → deploying）
 
 <!-- MANUAL ADDITIONS END -->
