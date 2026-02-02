@@ -27,7 +27,8 @@
     {
       "id": "backlog-migration",
       "title": "迁移到 backlog.json AI 原生任务管理",
-      "status": "developing",
+      "status": "testing",
+      "pr": "https://github.com/lkyxuan/fewunderstand/pull/43",
       "priority": "P0",
       "owner": "@claude",
       "created": "2026-02-02",
