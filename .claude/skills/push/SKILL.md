@@ -1,6 +1,6 @@
 ---
 name: push
-description: 推送代码。检查任务状态，自动提交，更新分支名和 PR 标题，推送后 GitHub Actions 会自动创建 PR。
+description: 推送代码。检查任务状态和分支名，自动提交，推送后 GitHub Actions 会自动创建 PR。
 ---
 
 # /push - 推送代码
@@ -109,37 +109,15 @@ git push origin $CURRENT_BRANCH -u
 
 推送后，GitHub Actions (`auto-pr.yml`) 会自动创建 PR 到 `dev` 分支。
 
-### Step 7: 获取并更新 PR
+### Step 7: 获取 PR URL
 
 ```bash
 # 等待 PR 创建
 sleep 5
-PR_NUMBER=$(gh pr list --head "$CURRENT_BRANCH" --json number -q '.[0].number')
 PR_URL=$(gh pr list --head "$CURRENT_BRANCH" --json url -q '.[0].url')
 ```
 
-**更新 PR 标题和描述（让它反映任务内容）：**
-```bash
-gh pr edit $PR_NUMBER \
-  --title "<type>: <任务标题>" \
-  --body "$(cat <<EOF
-## Summary
-<变更摘要>
-
-## Task
-Implements: $TASK_ID
-- Title: $TASK_TITLE
-- Why: $TASK_WHY
-
-## Test Plan
-- [ ] 功能测试
-- [ ] 回归测试
-
----
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
+PR 标题由 workflow 从分支名自动生成，分支名有意义就够了。
 
 ### Step 8: 更新 backlog.json 状态
 
@@ -158,8 +136,7 @@ git_push()
 
 分支: <branch>
 任务: [<id>] <title>
-PR: <pr_url>
-  - 标题已更新为任务标题
+PR: <pr_url>（workflow 自动创建）
 状态: developing → testing
 
 下一步：
