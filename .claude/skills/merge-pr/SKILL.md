@@ -34,11 +34,22 @@ description: Use when merging pull requests. Merge to dev marks Issue as 待部�
 # 获取 PR 信息
 gh pr view <PR_NUMBER> --json baseRefName,body
 
-# 从 PR body 提取 Issue 引用
-RELATED_ISSUE=$(gh pr view <PR_NUMBER> --json body --jq '.body' | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+# 从 PR body 提取 Issue 引用（必须用 Closes #）
+RELATED_ISSUE=$(gh pr view <PR_NUMBER> --json body --jq '.body' | grep -oiE '(closes|fixes)\s*#[0-9]+' | head -1 | grep -oE '[0-9]+')
 
 # 获取目标分支
 TARGET_BRANCH=$(gh pr view <PR_NUMBER> --json baseRefName --jq '.baseRefName')
+```
+
+**如果 PR 没有用 `Closes #`：**
+```
+❌ PR 没有正确关联 Issue。
+
+请确保 PR body 包含 "Closes #<issue-number>" 语法。
+这样可以：
+- 在 GitHub UI 显示关联
+- 合并时自动更新 Issue 状态
+- 在 Project 看板上追踪
 ```
 
 ### Step 2: 强制检查 Issue 状态（核心）
@@ -52,8 +63,8 @@ gh issue view $RELATED_ISSUE --json labels --jq '[.labels[].name]'
 
 | 目标分支 | Issue 必须状态 | 是否允许 merge | 处理 |
 |---------|---------------|---------------|------|
-| dev | `待测试` | ✅ 允许 | 继续流程，merge 后 → 待部署 |
-| main | `待部署` | ✅ 允许 | 继续流程，merge 后 → Done |
+| dev | `待测试` | ✅ 允许 | merge 后 → 待部署 |
+| main | `待部署` | ✅ 允许 | merge 后 → Done（关闭） |
 | dev | 其他状态 | ❌ 拒绝 | 提示需要先完成流程 |
 | main | 其他状态 | ❌ 拒绝 | 提示需要先 merge 到 dev |
 
@@ -150,29 +161,22 @@ git log origin/$TARGET_BRANCH --oneline -5
 
 ### Step 7: 更新相关 Issue 状态（调用 project skill）
 
-**所有状态变更都通过 project skill 完成。**
+**所有状态变更都通过 project skill 完成：**
 
-1. 查看 PR 关联的 Issues 和目标分支：
+| merge 到 | Issue 状态变更 |
+|---------|---------------|
+| dev | `/project move <N> 待部署` |
+| main | `/project move <N> Done`（自动关闭） |
+
+**执行状态更新：**
+
 ```bash
-# 获取 PR 的目标分支
-gh pr view <PR_NUMBER> --json baseRefName --jq '.baseRefName'
-
-# 从 PR body 提取 Issue 引用
-gh pr view <PR_NUMBER> --json body | grep -oE '#[0-9]+'
+if [ "$TARGET_BRANCH" = "dev" ]; then
+  # /project move <ISSUE_NUMBER> 待部署
+elif [ "$TARGET_BRANCH" = "main" ]; then
+  # /project move <ISSUE_NUMBER> Done
+fi
 ```
-
-2. 调用 project skill 更新状态：
-
-**如果 merge 到 dev：**
-```
-/project move <ISSUE_NUMBER> 待部署
-```
-
-**如果 merge 到 main：**
-```
-/project move <ISSUE_NUMBER> Done
-```
-（project skill 的 move Done 会自动关闭 Issue）
 
 ### Step 8: 归档 openspec（如有）
 
@@ -188,7 +192,7 @@ openspec archive <change-id> --yes
 
 ### Step 9: 输出结果
 
-**如果 merge 到 dev：**
+**merge 到 dev：**
 ```
 ✅ PR 合并完成！
 
@@ -199,13 +203,13 @@ Issue 状态: 待测试 → 待部署
 下一步：部署到生产环境后，merge 到 main 关闭 Issue
 ```
 
-**如果 merge 到 main：**
+**merge 到 main：**
 ```
 ✅ PR 合并完成！
 
 PR: #<number>
 合并到: main
-关闭的 Issues: #<issue1>, #<issue2>
+关闭的 Issues: #<issue1>
 
 已完成：
 - PR 已合并到生产
@@ -258,36 +262,38 @@ openspec archive <change-id> --yes  # Archive openspec
 
 ## Status Flow
 
+**使用 Sub-Issue 模式处理大功能：**
+
 ```
-push-to-dev 完成后：Issue 在 待测试
-           ↓
-merge 到 dev：Issue 移到 待部署（不关闭）
-           ↓
-merge 到 main：Issue 关闭（Done）
+父 Issue #10 (大功能)
+    │
+    │  ## Sub-Issues (task list 自动打勾)
+    │  - [x] #11 实现登录 API
+    │  - [x] #12 实现注册 API
+    │  - [ ] #13 添加 JWT 验证
+    │
+    ├── Sub-Issue #11 ← PR #20 (Closes #11) ✅ merge → Done
+    ├── Sub-Issue #12 ← PR #21 (Closes #12) ✅ merge → Done
+    └── Sub-Issue #13 ← PR #22 (Closes #13) 进行中
+                             ↓
+                     所有 sub-issues 完成
+                             ↓
+                     手动关闭父 Issue #10
 ```
+
+**每个 PR 必须用 `Closes #` 完全解决一个 Issue（可以是 sub-issue）。**
 
 ## 状态检查速查表
 
 ```
-要 merge 到 dev，Issue 必须在「待测试」
-要 merge 到 main，Issue 必须在「待部署」
+┌─────────────────────────────────────────────────────────────────┐
+│ merge 到 dev:  Issue 必须在「待测试」 → 变「待部署」              │
+│ merge 到 main: Issue 必须在「待部署」 → 变「Done」（关闭）        │
+└─────────────────────────────────────────────────────────────────┘
 
-如果 Issue 在其他状态：
-
-Merge 到 dev:
-  问题       → 不能 merge（需要完整开发流程）
-  待定方案   → 不能 merge（需要完整开发流程）
-  待出设计   → 不能 merge（需要完整开发流程）
-  设计审核   → 不能 merge（需要先 push-to-dev）
-  开发中     → 不能 merge（需要先 push-to-dev）
-  待测试     → 可以 merge ✅ → 待部署
-  待部署     → 不能 merge（已经 merge 过了）
-  Done       → 不能 merge（Issue 已关闭）
-
-Merge 到 main:
-  问题~待测试 → 不能 merge（需要先 merge 到 dev）
-  待部署     → 可以 merge ✅ → Done（关闭）
-  Done       → 不能 merge（Issue 已关闭）
+功能太大需要多个 PR？
+→ 不要用 Refs #，用 /project split 拆分 sub-issues
+→ 每个 PR 对应一个 sub-issue，用 Closes # 完全解决
 ```
 
 ## Red Flags

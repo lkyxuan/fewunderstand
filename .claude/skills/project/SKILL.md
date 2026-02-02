@@ -108,22 +108,36 @@ gh project item-edit \
 - 待测试 → Done（必须先经过待部署）
 - 开发中 → 待定方案（不能倒退，除了设计审核打回）
 
-## Sub-Issue 拆分
+## Sub-Issue 模式（推荐）
 
-**时机：** 设计审核通过后，如果 tasks.md 有多个任务，可以拆分成 sub-issues。
+**什么时候用 Sub-Issue？**
+- 一个大功能需要多个 PR 才能完成
+- 每个 PR 应该有明确的"完全解决"目标
+
+**为什么比 `Refs #` 好？**
+- 每个 PR 都有明确的 Issue 对应
+- 进度可追踪（3/5 完成）
+- 在 Project 看板上更清晰
+- GitHub 原生支持 task list 自动打勾
 
 ```
 父 Issue #10 "添加用户认证"
     │
-    ├── Sub-Issue #11 "实现登录 API"
-    ├── Sub-Issue #12 "实现注册 API"
-    └── Sub-Issue #13 "添加 JWT 验证"
+    │  ## Sub-Issues
+    │  - [x] #11 实现登录 API      ← PR #20 (Closes #11) ✅
+    │  - [x] #12 实现注册 API      ← PR #21 (Closes #12) ✅
+    │  - [ ] #13 添加 JWT 验证     ← PR #22 (Closes #13) 进行中
+    │
+    └── 当所有 sub-issues 完成时 → 关闭父 Issue #10
 ```
+
+**时机：** 设计审核通过后，如果 tasks.md 有多个任务，拆分成 sub-issues。
 
 **规则：**
 - 每个 sub-issue 独立走流程：`开发中 → 待测试 → 待部署 → Done`
 - 父 Issue 等所有 sub-issues 完成后才能关闭
 - Sub-issue 跳过方案阶段（设计已在父 Issue 完成）
+- 每个 PR 用 `Closes #sub-issue`，而不是 `Refs #parent-issue`
 
 ## 操作列表
 
@@ -260,16 +274,16 @@ gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id 
 
 根据 `openspec/changes/<feature>/tasks.md` 创建 sub-issues：
 
+**Step 1: 为每个任务创建 sub-issue**
+
 ```bash
-# 为每个任务创建 sub-issue
-gh issue create \
-  --title "[Sub] <任务标题>" \
+# 创建 sub-issue（重复执行每个任务）
+PARENT=<PARENT_ISSUE_NUMBER>
+SUB_URL=$(gh issue create \
+  --title "[Sub #$PARENT] <任务标题>" \
   --body "$(cat <<'EOF'
 ## 父 Issue
-#<PARENT_ISSUE_NUMBER>
-
-## 任务来源
-openspec/changes/<feature>/tasks.md
+Part of #<PARENT_ISSUE_NUMBER>
 
 ## 任务描述
 <从 tasks.md 提取的具体任务>
@@ -278,10 +292,61 @@ openspec/changes/<feature>/tasks.md
 <验收条件>
 EOF
 )" \
-  --label "开发中"
+  --label "开发中")
 
-# 在父 Issue 中记录
-gh issue comment <PARENT> --body "已拆分 sub-issues: #11, #12, #13"
+SUB_NUM=$(echo $SUB_URL | grep -oE '[0-9]+$')
+echo "Created sub-issue #$SUB_NUM"
+```
+
+**Step 2: 将 sub-issues 添加到 Project**
+
+```bash
+# 等待 Issue 添加到 Project
+sleep 2
+
+# 更新 Project Status 为"开发中"
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r ".items[] | select(.content.number == $SUB_NUM) | .id")
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id faca3795
+```
+
+**Step 3: 在父 Issue 中添加 Task List（追踪进度）**
+
+```bash
+# 在父 Issue body 末尾添加 task list
+gh issue edit $PARENT --body "$(gh issue view $PARENT --json body -q .body)
+
+## Sub-Issues
+- [ ] #11 实现登录 API
+- [ ] #12 实现注册 API
+- [ ] #13 添加 JWT 验证
+"
+
+# 添加评论记录
+gh issue comment $PARENT --body "已拆分为 sub-issues: #11, #12, #13
+
+每个 sub-issue 完成后会自动在上方 task list 打勾 ✅"
+```
+
+**Step 4: 将父 Issue 状态改为「开发中」（等待 sub-issues）**
+
+```bash
+gh issue edit $PARENT --remove-label "设计审核" --add-label "开发中"
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r ".items[] | select(.content.number == $PARENT) | .id")
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id faca3795
+```
+
+**输出结果：**
+```
+✅ Issue #10 已拆分为 3 个 sub-issues:
+
+父 Issue: #10 添加用户认证（开发中 - 等待 sub-issues）
+  ├── #11 实现登录 API（开发中）
+  ├── #12 实现注册 API（开发中）
+  └── #13 添加 JWT 验证（开发中）
+
+每个 sub-issue 独立开发：
+- 开发完成后 /push-to-dev → PR (Closes #sub-issue)
+- 所有 sub-issues 完成后，手动关闭父 Issue #10
 ```
 
 ### 9. move - 通用状态移动

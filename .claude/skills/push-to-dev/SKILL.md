@@ -153,9 +153,53 @@ git branch -m "$CURRENT_BRANCH" "$NEW_BRANCH"
 git push origin $CURRENT_BRANCH -u
 ```
 
-### Step 7: 创建或更新 PR
+### Step 7: 智能判断关联哪个 Issue（AI 自动）
+
+**AI 自动执行以下判断：**
 
 ```bash
+# 1. 检查父 Issue 是否有 sub-issues
+PARENT_BODY=$(gh issue view $RELATED_ISSUE --json body -q .body)
+SUB_ISSUES=$(echo "$PARENT_BODY" | grep -oE '#[0-9]+' | tr -d '#')
+
+# 2. 检查 openspec/tasks.md 有多少任务
+TASK_COUNT=$(grep -c '^\s*-\s*\[' openspec/changes/*/tasks.md 2>/dev/null || echo 0)
+```
+
+**情况 A: Issue 已有 sub-issues**
+```
+检测到父 Issue #10 有以下 sub-issues:
+  - [ ] #11 实现登录 API
+  - [x] #12 实现注册 API
+  - [ ] #13 添加 JWT 验证
+
+根据你的代码变更，这个 PR 应该关闭 #11（实现登录 API）
+
+确认吗？[Y/n]
+```
+→ AI 分析 commit 内容，自动匹配最相关的 sub-issue
+
+**情况 B: Issue 没有 sub-issues，但 tasks.md 有多个任务**
+```
+检测到 Issue #10 的 tasks.md 有 5 个任务，但没有拆分 sub-issues。
+
+建议先拆分：/project split 10
+
+这样每个 PR 可以独立追踪进度。
+
+是否现在拆分？[Y/n]
+```
+→ 如果用户同意，自动执行 split
+
+**情况 C: 简单 Issue，直接关闭**
+```
+Issue #10 是简单任务，直接用 Closes #10
+```
+
+### Step 8: 创建 PR
+
+```bash
+# TARGET_ISSUE 由 Step 7 自动确定（可能是 sub-issue）
 gh pr create \
   --title "<commit 消息>" \
   --body "$(cat <<EOF
@@ -163,7 +207,7 @@ gh pr create \
 <变更摘要>
 
 ## Related Issue
-Closes #$RELATED_ISSUE
+Closes #$TARGET_ISSUE
 
 ## Test Plan
 - [ ] 功能测试
@@ -176,13 +220,13 @@ EOF
   --base dev
 ```
 
-### Step 8: 更新 Issue 状态（调用 project skill）
+### Step 9: 更新 Issue 状态
 
 ```
-/project move $RELATED_ISSUE 待测试
+/project move $TARGET_ISSUE 待测试
 ```
 
-### Step 9: 输出结果
+### Step 10: 输出结果
 
 ```
 ✅ 推送完成！
