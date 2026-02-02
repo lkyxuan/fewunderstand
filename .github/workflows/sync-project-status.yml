@@ -1,0 +1,109 @@
+name: Sync Issue Label to Project Status
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: read
+  repository-projects: write
+
+env:
+  PROJECT_ID: "PVT_kwHOBNDkTM4BN_Zk"
+  STATUS_FIELD_ID: "PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U"
+
+jobs:
+  sync-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Map label to status option ID
+        id: map
+        run: |
+          LABEL="${{ github.event.label.name }}"
+
+          case "$LABEL" in
+            "问题")       OPTION_ID="6025e8f4" ;;
+            "待定方案")   OPTION_ID="3e5e366c" ;;
+            "待出设计")   OPTION_ID="4f07b88d" ;;
+            "设计审核")   OPTION_ID="dc9c1608" ;;
+            "开发中")     OPTION_ID="faca3795" ;;
+            "待测试")     OPTION_ID="8c02b904" ;;
+            "待部署")     OPTION_ID="a7db81bf" ;;
+            "Done")       OPTION_ID="80b26af7" ;;
+            "部署完成")   OPTION_ID="80b26af7" ;;
+            *)            OPTION_ID="" ;;
+          esac
+
+          if [ -z "$OPTION_ID" ]; then
+            echo "Label '$LABEL' is not a status label, skipping"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Mapping label '$LABEL' to option ID '$OPTION_ID'"
+            echo "option_id=$OPTION_ID" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get Project Item ID
+        if: steps.map.outputs.skip == 'false'
+        id: get-item
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+
+          # Get item ID from project
+          ITEM_ID=$(gh api graphql -f query='
+            query($owner: String!, $number: Int!) {
+              user(login: $owner) {
+                projectV2(number: $number) {
+                  items(first: 100) {
+                    nodes {
+                      id
+                      content {
+                        ... on Issue {
+                          number
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ' -f owner="lkyxuan" -F number=2 --jq ".data.user.projectV2.items.nodes[] | select(.content.number == $ISSUE_NUMBER) | .id")
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "Issue #$ISSUE_NUMBER not found in project"
+            echo "found=false" >> $GITHUB_OUTPUT
+          else
+            echo "Found item ID: $ITEM_ID"
+            echo "item_id=$ITEM_ID" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Project Status
+        if: steps.map.outputs.skip == 'false' && steps.get-item.outputs.found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api graphql -f query='
+            mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+              updateProjectV2ItemFieldValue(
+                input: {
+                  projectId: $projectId
+                  itemId: $itemId
+                  fieldId: $fieldId
+                  value: { singleSelectOptionId: $optionId }
+                }
+              ) {
+                projectV2Item {
+                  id
+                }
+              }
+            }
+          ' \
+            -f projectId="${{ env.PROJECT_ID }}" \
+            -f itemId="${{ steps.get-item.outputs.item_id }}" \
+            -f fieldId="${{ env.STATUS_FIELD_ID }}" \
+            -f optionId="${{ steps.map.outputs.option_id }}"
+
+          echo "✅ Updated Issue #${{ github.event.issue.number }} status to match label '${{ github.event.label.name }}'"

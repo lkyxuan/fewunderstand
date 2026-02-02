@@ -21,6 +21,49 @@ GitHub Projects + Issues 统一管理 skill，负责项目进度追踪和协调�
 
 **Project URL:** https://github.com/users/lkyxuan/projects/2
 
+**重要：状态需要同时更新两个地方！**
+
+| 系统 | 命令 | 用途 |
+|------|------|------|
+| Issue 标签 | `gh issue edit --add-label` | Issue 页面显示 |
+| Project Status | `gh project item-edit` | 看板列显示 |
+
+### 项目 ID 和字段 ID
+
+```bash
+PROJECT_ID="PVT_kwHOBNDkTM4BN_Zk"
+STATUS_FIELD_ID="PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U"
+```
+
+### 状态选项 ID
+
+| 状态 | Option ID |
+|------|-----------|
+| 问题 | `6025e8f4` |
+| 待定方案 | `3e5e366c` |
+| 待出设计 | `4f07b88d` |
+| 设计审核 | `dc9c1608` |
+| 开发中 | `faca3795` |
+| 待测试 | `8c02b904` |
+| 待部署 | `a7db81bf` |
+| Done | `80b26af7` |
+
+### 获取 Issue 的 Project Item ID
+
+```bash
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+```
+
+### 更新 Project Status
+
+```bash
+gh project item-edit \
+  --project-id PVT_kwHOBNDkTM4BN_Zk \
+  --id $ITEM_ID \
+  --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U \
+  --single-select-option-id <STATUS_OPTION_ID>
+```
+
 ## 8 个状态（统一流程）
 
 所有改动都走同一套流程，没有"小改动跳过"：
