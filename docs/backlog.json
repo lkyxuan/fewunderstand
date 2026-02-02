@@ -25,6 +25,29 @@
   },
   "tasks": [
     {
+      "id": "backlog-migration",
+      "title": "迁移到 backlog.json AI 原生任务管理",
+      "status": "developing",
+      "priority": "P0",
+      "owner": "@claude",
+      "created": "2026-02-02",
+      "why": "GitHub Projects 太复杂，AI 原生方式更简单直接",
+      "what": "创建 backlog.json，删除 GitHub Projects skills，更新 CLAUDE.md",
+      "context": {
+        "files": ["docs/backlog.json", ".claude/skills/backlog/", ".claude/skills/push-to-dev/", "CLAUDE.md"],
+        "related": ["gh-37", "gh-40"]
+      },
+      "checklist": [
+        "创建 docs/backlog.json",
+        "创建 /backlog skill",
+        "更新 push-to-dev 使用 backlog",
+        "更新 merge-pr 使用 backlog",
+        "删除 project skill",
+        "同步 GitHub Issues 到 backlog",
+        "更新 CLAUDE.md"
+      ]
+    },
+    {
       "id": "gh-40",
       "title": "添加 Issue 状态强制检查机制",
       "status": "deploying",
