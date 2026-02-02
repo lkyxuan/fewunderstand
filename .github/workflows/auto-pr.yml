@@ -141,18 +141,16 @@ jobs:
   # ==================== Job 2: AI 部署测试网 ====================
   deploy-preview:
     needs: create-pr
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, fuce]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Analyze changes
         id: analyze
         run: |
+          cd /root/fuce
+          git fetch origin
+
           # 分析这次变更涉及哪些文件
-          CHANGED_FILES=$(git diff --name-only origin/dev..HEAD)
+          CHANGED_FILES=$(git diff --name-only origin/dev..origin/${{ github.ref_name }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
@@ -179,63 +177,49 @@ jobs:
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Setup SSH
-        if: steps.analyze.outputs.need_deploy == 'true'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 46.224.5.136 >> ~/.ssh/known_hosts
-
       - name: AI Deploy to Test Server
         if: steps.analyze.outputs.need_deploy == 'true'
         id: deploy
         run: |
-          # 将变更文件列表和分支信息传递给服务器上的 AI
+          cd /root/fuce
           BRANCH_NAME="${{ github.ref_name }}"
           CHANGED_FILES="${{ steps.analyze.outputs.changed_files }}"
 
-          # SSH 到服务器执行 AI 部署
-          ssh root@46.224.5.136 << ENDSSH
-            set -e
-            cd /root/fuce
+          echo "========== 拉取代码 =========="
+          git fetch origin $BRANCH_NAME
+          git checkout $BRANCH_NAME
+          git pull origin $BRANCH_NAME
 
-            echo "========== 拉取代码 =========="
-            git fetch origin $BRANCH_NAME
-            git checkout $BRANCH_NAME
-            git pull origin $BRANCH_NAME
+          echo "========== AI 分析并部署 =========="
+          # 调用 Claude Code 进行智能部署
+          claude --print "
+          你是部署助手。请分析以下代码变更并执行部署：
 
-            echo "========== AI 分析并部署 =========="
-            # 调用 Claude Code 进行智能部署
-            claude --print "
-            你是部署助手。请分析以下代码变更并执行部署：
+          分支：$BRANCH_NAME
+          变更文件：
+          $CHANGED_FILES
 
-            分支：$BRANCH_NAME
-            变更文件：
-            $CHANGED_FILES
+          请执行以下步骤：
+          1. 分析变更文件，判断需要哪些部署操作：
+             - 前端代码 (frontend/) → npm build + 重启前端服务
+             - 爬虫代码 (crawlers/) → 重启爬虫容器
+             - docker-compose.yml → docker compose up -d
+             - 数据库相关 → 运行迁移脚本
+             - Hasura metadata → hasura metadata apply
+             - 仅配置文件 → 可能只需重启服务
 
-            请执行以下步骤：
-            1. 分析变更文件，判断需要哪些部署操作：
-               - 前端代码 (frontend/) → npm build + 重启前端服务
-               - 爬虫代码 (crawlers/) → 重启爬虫容器
-               - docker-compose.yml → docker compose up -d
-               - 数据库相关 → 运行迁移脚本
-               - Hasura metadata → hasura metadata apply
-               - 仅配置文件 → 可能只需重启服务
+          2. 执行必要的部署命令
 
-            2. 执行必要的部署命令
+          3. 验证服务是否正常运行：
+             - 检查容器状态：docker compose ps
+             - 检查端口是否监听
+             - 简单的健康检查
 
-            3. 验证服务是否正常运行：
-               - 检查容器状态：docker compose ps
-               - 检查端口是否监听
-               - 简单的健康检查
-
-            4. 最后输出部署结果，格式：
-               DEPLOY_STATUS: SUCCESS 或 FAILED
-               DEPLOY_SUMMARY: 一句话总结
-               DEPLOY_DETAILS: 详细操作日志
-            "
-          ENDSSH
+          4. 最后输出部署结果，格式：
+             DEPLOY_STATUS: SUCCESS 或 FAILED
+             DEPLOY_SUMMARY: 一句话总结
+             DEPLOY_DETAILS: 详细操作日志
+          "
 
           echo "deploy_success=true" >> $GITHUB_OUTPUT
 
