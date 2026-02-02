@@ -142,7 +142,8 @@ gh issue list --state open --label "待测试"
 ### 2. create - 创建 Issue
 
 ```bash
-gh issue create \
+# 1. 创建 Issue
+ISSUE_URL=$(gh issue create \
   --title "<标题>" \
   --body "$(cat <<'EOF'
 ## 问题描述
@@ -152,20 +153,38 @@ gh issue create \
 <期望的解决效果>
 EOF
 )" \
-  --label "问题"
+  --label "问题")
+
+# 提取 Issue 编号
+ISSUE_NUM=$(echo $ISSUE_URL | grep -oE '[0-9]+$')
+
+# 2. 等待 Issue 自动添加到 Project（约 1-2 秒）
+sleep 2
+
+# 3. 更新 Project Status 为 "问题"
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r ".items[] | select(.content.number == $ISSUE_NUM) | .id")
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 6025e8f4
+
+echo "✅ Issue #$ISSUE_NUM 已创建，状态：问题"
 ```
 
 ### 3. claim - 认领 Issue（问题 → 待定方案）
 
 ```bash
+# 1. 更新 Issue 标签
 gh issue edit <N> --add-assignee @me
 gh issue edit <N> --remove-label "问题" --add-label "待定方案"
 gh issue comment <N> --body "已认领，开始思考解决方案"
+
+# 2. 更新 Project Status（同步看板）
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 3e5e366c
 ```
 
 ### 4. idea - 提交方案思路（待定方案 → 待出设计）
 
 ```bash
+# 1. 更新 Issue
 gh issue comment <N> --body "$(cat <<'EOF'
 ## 方案思路
 
@@ -181,8 +200,11 @@ gh issue comment <N> --body "$(cat <<'EOF'
 思路确定，请用 openspec 出详细设计
 EOF
 )"
-
 gh issue edit <N> --remove-label "待定方案" --add-label "待出设计"
+
+# 2. 更新 Project Status
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 4f07b88d
 ```
 
 ### 5. design - 提交设计（待出设计 → 设计审核）
@@ -190,6 +212,7 @@ gh issue edit <N> --remove-label "待定方案" --add-label "待出设计"
 用 openspec 出详细设计后：
 
 ```bash
+# 1. 更新 Issue
 gh issue edit <N> --remove-label "待出设计" --add-label "设计审核"
 gh issue comment <N> --body "$(cat <<'EOF'
 ## OpenSpec 设计完成
@@ -203,20 +226,34 @@ gh issue comment <N> --body "$(cat <<'EOF'
 请审核设计方案。
 EOF
 )"
+
+# 2. 更新 Project Status
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id dc9c1608
 ```
 
 ### 6. approve - 审核通过（设计审核 → 开发中）
 
 ```bash
+# 1. 更新 Issue
 gh issue edit <N> --remove-label "设计审核" --add-label "开发中"
 gh issue comment <N> --body "设计审核通过，开始开发"
+
+# 2. 更新 Project Status
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id faca3795
 ```
 
 ### 7. reject - 审核不通过（设计审核 → 待出设计）
 
 ```bash
+# 1. 更新 Issue
 gh issue edit <N> --remove-label "设计审核" --add-label "待出设计"
 gh issue comment <N> --body "设计需要修改：<具体原因>"
+
+# 2. 更新 Project Status
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 4f07b88d
 ```
 
 ### 8. split - 拆分 Sub-Issues（设计审核通过后）
@@ -252,17 +289,23 @@ gh issue comment <PARENT> --body "已拆分 sub-issues: #11, #12, #13"
 **只在特殊情况下使用，正常流程用上面的专用命令。**
 
 ```bash
+# 获取 Item ID（所有 move 操作都需要）
+ITEM_ID=$(gh project item-list 2 --owner lkyxuan --format json | jq -r '.items[] | select(.content.number == <N>) | .id')
+
 # 开发中 → 待测试（通常由 /push-to-dev 自动调用）
 gh issue edit <N> --remove-label "开发中" --add-label "待测试"
 gh issue comment <N> --body "代码完成，等待测试"
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 8c02b904
 
 # 待测试 → 待部署（通常由 /merge-pr 到 dev 自动调用）
 gh issue edit <N> --remove-label "待测试" --add-label "待部署"
 gh issue comment <N> --body "测试通过，等待部署到生产"
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id a7db81bf
 
 # 待部署 → Done（通常由 /merge-pr 到 main 自动调用）
 gh issue edit <N> --remove-label "待部署" --add-label "部署完成"
 gh issue close <N> --comment "已部署到生产环境"
+gh project item-edit --project-id PVT_kwHOBNDkTM4BN_Zk --id $ITEM_ID --field-id PVTSSF_lAHOBNDkTM4BN_Zkzg80v3U --single-select-option-id 80b26af7
 ```
 
 ### 10. block / unblock - 阻塞管理
