@@ -1,0 +1,194 @@
+{
+  "version": "2.0",
+  "description": "AI 原生任务管理 - 替代 GitHub Projects",
+  "config": {
+    "statuses": [
+      { "id": "problem", "name": "问题", "emoji": "❓" },
+      { "id": "planning", "name": "待定方案", "emoji": "🤔" },
+      { "id": "designing", "name": "待出设计", "emoji": "📐" },
+      { "id": "reviewing", "name": "设计审核", "emoji": "👀" },
+      { "id": "developing", "name": "开发中", "emoji": "💻" },
+      { "id": "testing", "name": "待测试", "emoji": "🧪" },
+      { "id": "deploying", "name": "待部署", "emoji": "🚀" },
+      { "id": "done", "name": "Done", "emoji": "✅" }
+    ],
+    "transitions": {
+      "problem": ["planning"],
+      "planning": ["designing"],
+      "designing": ["reviewing"],
+      "reviewing": ["developing", "designing"],
+      "developing": ["testing"],
+      "testing": ["deploying"],
+      "deploying": ["done"]
+    },
+    "priorities": ["P0", "P1", "P2"]
+  },
+  "tasks": [
+    {
+      "id": "backlog-migration",
+      "title": "迁移到 backlog.json AI 原生任务管理",
+      "status": "testing",
+      "pr": "https://github.com/lkyxuan/fewunderstand/pull/46",
+      "priority": "P0",
+      "owner": "@claude",
+      "created": "2026-02-02",
+      "why": "GitHub Projects 太复杂，AI 原生方式更简单直接",
+      "what": "创建 backlog.json，删除 GitHub Projects skills，更新 CLAUDE.md",
+      "context": {
+        "files": ["docs/backlog.json", ".claude/skills/backlog/", ".claude/skills/push-to-dev/", "CLAUDE.md"],
+        "related": ["gh-37", "gh-40"]
+      },
+      "checklist": [
+        "创建 docs/backlog.json",
+        "创建 /backlog skill",
+        "更新 push-to-dev 使用 backlog",
+        "更新 merge-pr 使用 backlog",
+        "删除 project skill",
+        "同步 GitHub Issues 到 backlog",
+        "更新 CLAUDE.md"
+      ]
+    },
+    {
+      "id": "gh-40",
+      "title": "添加 Issue 状态强制检查机制",
+      "status": "deploying",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 40,
+      "why": "push 代码时 Issue 不在「开发中」，merge PR 时状态不对，跳过流程步骤",
+      "what": "push-to-dev 强制检查 Issue 必须在「开发中」，merge-pr 强制检查状态",
+      "context": { "files": [], "related": ["gh-37"] },
+      "checklist": []
+    },
+    {
+      "id": "gh-37",
+      "title": "重构项目管理 skill 和 GitHub Actions 自动部署",
+      "status": "deploying",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 37,
+      "why": "统一项目管理架构",
+      "what": "统一 /project skill，8 列状态工作流，GitHub Actions 自动部署",
+      "context": { "files": [], "related": [] },
+      "checklist": []
+    },
+    {
+      "id": "gh-33",
+      "title": "添加 Kline + Indicator 备用数据源",
+      "status": "problem",
+      "priority": "P2",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 33,
+      "why": "数据库无数据时需要备用数据源",
+      "what": "使用币安 API 数据作为备用数据源",
+      "context": { "files": [], "related": [] },
+      "checklist": []
+    },
+    {
+      "id": "gh-32",
+      "title": "讨论: 多用户访问场景下的架构扩展方案",
+      "status": "problem",
+      "priority": "P2",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 32,
+      "why": "单机部署架构如果要提供公共服务需要考虑扩展性",
+      "what": "讨论读写分离、缓存层、CDN、Hasura Cloud 等方案",
+      "context": { "files": [], "related": [] },
+      "checklist": []
+    },
+    {
+      "id": "gh-31",
+      "title": "添加数据源管理后台页面",
+      "status": "problem",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 31,
+      "why": "需要集中展示和管理所有数据源状态",
+      "what": "创建 /admin/datasources 页面，显示数据源列表、健康状态、更新时间、数据量",
+      "context": { "files": [], "related": [] },
+      "checklist": [
+        "可以在前端访问管理页面",
+        "能看到所有数据源的列表",
+        "能看到每个数据源的运行状态",
+        "能看到最近更新时间"
+      ]
+    },
+    {
+      "id": "gh-28",
+      "title": "添加前端主页面搜索币种功能",
+      "status": "problem",
+      "priority": "P2",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 28,
+      "why": "用户需要快速找到特定币种",
+      "what": "在主页面添加搜索功能",
+      "context": { "files": [], "related": [] },
+      "checklist": []
+    },
+    {
+      "id": "gh-27",
+      "title": "部署 RSSHub 自托管新闻爬虫",
+      "status": "problem",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 27,
+      "why": "需要自动采集加密货币新闻",
+      "what": "部署 RSSHub Docker，创建 news 表，Python 脚本定时拉取",
+      "context": { "files": [], "related": ["gh-20", "gh-19"] },
+      "checklist": [
+        "服务器部署 RSSHub Docker 容器",
+        "创建 news 表存储新闻数据",
+        "编写 Python 脚本定时拉取 RSS 并写入数据库",
+        "Hasura 配置暴露 news 表 GraphQL API",
+        "验证端到端数据流"
+      ]
+    },
+    {
+      "id": "gh-26",
+      "title": "[BUG] 前端页面显示不全",
+      "status": "problem",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 26,
+      "why": "不同分辨率/浏览器下页面显示不全",
+      "what": "修复响应式布局问题",
+      "context": { "files": [], "related": [] },
+      "checklist": []
+    },
+    {
+      "id": "gh-20",
+      "title": "验证右侧信息流\"流逝\"效果",
+      "status": "problem",
+      "priority": "P2",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 20,
+      "why": "验证前端新闻流展示效果",
+      "what": "信息流每分钟至少显示 1 条新新闻，新条目从顶部插入",
+      "context": { "files": [], "related": ["gh-19"] },
+      "checklist": []
+    },
+    {
+      "id": "gh-19",
+      "title": "验证前端 Subscription 接收新闻数据",
+      "status": "problem",
+      "priority": "P2",
+      "owner": null,
+      "created": "2026-02-02",
+      "github_issue": 19,
+      "why": "确认前端能实时接收新闻数据",
+      "what": "GraphQL Subscription 实时收到新 news 数据",
+      "context": { "files": [], "related": ["gh-27"] },
+      "checklist": []
+    }
+  ],
+  "archive": []
+}
