@@ -1,0 +1,44 @@
+{
+  "version": "2.0",
+  "description": "AI 原生任务管理 - 替代 GitHub Projects",
+  "config": {
+    "statuses": [
+      { "id": "problem", "name": "问题", "emoji": "❓" },
+      { "id": "planning", "name": "待定方案", "emoji": "🤔" },
+      { "id": "designing", "name": "待出设计", "emoji": "📐" },
+      { "id": "reviewing", "name": "设计审核", "emoji": "👀" },
+      { "id": "developing", "name": "开发中", "emoji": "💻" },
+      { "id": "testing", "name": "待测试", "emoji": "🧪" },
+      { "id": "deploying", "name": "待部署", "emoji": "🚀" },
+      { "id": "done", "name": "Done", "emoji": "✅" }
+    ],
+    "transitions": {
+      "problem": ["planning"],
+      "planning": ["designing"],
+      "designing": ["reviewing"],
+      "reviewing": ["developing", "designing"],
+      "developing": ["testing"],
+      "testing": ["deploying"],
+      "deploying": ["done"]
+    },
+    "priorities": ["P0", "P1", "P2"]
+  },
+  "tasks": [
+    {
+      "id": "example-001",
+      "title": "示例：添加用户认证",
+      "status": "problem",
+      "priority": "P1",
+      "owner": null,
+      "created": "2026-02-02",
+      "why": "用户需要登录才能访问",
+      "what": "实现 JWT 认证",
+      "context": {
+        "files": [],
+        "related": []
+      },
+      "checklist": []
+    }
+  ],
+  "archive": []
+}
