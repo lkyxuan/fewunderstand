@@ -1,4 +1,4 @@
-name: Auto PR + Deploy Preview
+name: Auto Create PR
 
 on:
   push:
@@ -31,33 +31,23 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ==================== Job 1: 创建 PR ====================
   create-pr:
     runs-on: ubuntu-latest
-    outputs:
-      pr_number: ${{ steps.pr.outputs.pr_number }}
-      pr_url: ${{ steps.pr.outputs.pr_url }}
-      is_new_pr: ${{ steps.pr.outputs.is_new_pr }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create or Get PR
-        id: pr
+      - name: Create Pull Request
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
 
           # 检查是否已经存在 PR
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
 
-          if [ -n "$PR_NUMBER" ]; then
-            echo "PR already exists: #$PR_NUMBER"
-            PR_URL=$(gh pr view $PR_NUMBER --json url --jq '.url')
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-            echo "is_new_pr=false" >> $GITHUB_OUTPUT
+          if [ -n "$PR_EXISTS" ]; then
+            echo "PR already exists: #$PR_EXISTS. Skipping creation."
             exit 0
           fi
 
@@ -81,6 +71,7 @@ jobs:
             BASE_BRANCH="dev"
             PR_PREFIX="Docs"
           elif [[ "$BRANCH_NAME" =~ ^[0-9]{3}- ]]; then
+            # 编号分支（如 001-infrastructure）
             BASE_BRANCH="dev"
             PR_PREFIX="Feature"
           else
@@ -90,186 +81,26 @@ jobs:
 
           # 提取分支名称中的描述部分并转为标题格式
           BRANCH_DESC=$(echo "$BRANCH_NAME" | sed 's|^[^_/]*[_/]||; s|^[0-9]*-||' | tr '-' ' ' | tr '_' ' ')
+          # 首字母大写 (兼容 GNU/BSD sed)
           BRANCH_DESC=$(echo "$BRANCH_DESC" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')
 
           # 创建 PR
-          cat > /tmp/pr_body.md << 'EOF'
-          Auto-generated PR for branch $BRANCH_NAME
+          echo "Auto-generated PR for branch $BRANCH_NAME" > /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "**Target:** $BASE_BRANCH" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "---" >> /tmp/pr_body.md
+          echo "" >> /tmp/pr_body.md
+          echo "## Checklist" >> /tmp/pr_body.md
+          echo "- [ ] Tests pass" >> /tmp/pr_body.md
+          echo "- [ ] Documentation updated (if needed)" >> /tmp/pr_body.md
+          echo "- [ ] Code follows project style" >> /tmp/pr_body.md
 
-          **Target:** $BASE_BRANCH
-
-          ---
-
-          ## Checklist
-          - [ ] Tests pass
-          - [ ] Documentation updated (if needed)
-          - [ ] Code follows project style
-
-          ---
-          🤖 测试网部署状态将在下方评论中更新
-          EOF
-
-          PR_URL=$(gh pr create \
+          gh pr create \
             --base "$BASE_BRANCH" \
             --head "$BRANCH_NAME" \
             --title "$PR_PREFIX: $BRANCH_DESC" \
-            --body "Auto-generated PR for branch $BRANCH_NAME
+            --body-file /tmp/pr_body.md \
+            || echo "Failed to create PR"
 
-          **Target:** $BASE_BRANCH
-
-          ---
-
-          ## Checklist
-          - [ ] Tests pass
-          - [ ] Documentation updated (if needed)
-          - [ ] Code follows project style
-
-          ---
-          🤖 测试网部署状态将在下方评论中更新" 2>&1 || echo "")
-
-          if [ -n "$PR_URL" ]; then
-            PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-            echo "PR created: $PR_URL"
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-            echo "is_new_pr=true" >> $GITHUB_OUTPUT
-          else
-            echo "Failed to create PR"
-            exit 1
-          fi
-
-  # ==================== Job 2: AI 部署测试网 ====================
-  deploy-preview:
-    needs: create-pr
-    runs-on: [self-hosted, fuce]
-    steps:
-      - name: Analyze changes
-        id: analyze
-        run: |
-          cd /root/fuce
-          git fetch origin
-
-          # 分析这次变更涉及哪些文件
-          CHANGED_FILES=$(git diff --name-only origin/dev..origin/${{ github.ref_name }})
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-
-          # 判断是否需要部署
-          NEED_DEPLOY="true"
-          DEPLOY_REASON=""
-
-          # 只有文档变更，跳过部署
-          if echo "$CHANGED_FILES" | grep -qvE '\.(md|txt|rst)$'; then
-            DEPLOY_REASON="代码变更，需要部署"
-          else
-            if [ -n "$CHANGED_FILES" ]; then
-              NEED_DEPLOY="false"
-              DEPLOY_REASON="仅文档变更，跳过部署"
-            else
-              NEED_DEPLOY="false"
-              DEPLOY_REASON="无文件变更"
-            fi
-          fi
-
-          echo "need_deploy=$NEED_DEPLOY" >> $GITHUB_OUTPUT
-          echo "deploy_reason=$DEPLOY_REASON" >> $GITHUB_OUTPUT
-          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: AI Deploy to Test Server
-        if: steps.analyze.outputs.need_deploy == 'true'
-        id: deploy
-        run: |
-          cd /root/fuce
-          BRANCH_NAME="${{ github.ref_name }}"
-          CHANGED_FILES="${{ steps.analyze.outputs.changed_files }}"
-
-          echo "========== 拉取代码 =========="
-          git fetch origin $BRANCH_NAME
-          git checkout $BRANCH_NAME
-          git pull origin $BRANCH_NAME
-
-          echo "========== AI 分析并部署 =========="
-          # 调用 Claude Code 进行智能部署
-          claude --print "
-          你是部署助手。请分析以下代码变更并执行部署：
-
-          分支：$BRANCH_NAME
-          变更文件：
-          $CHANGED_FILES
-
-          请执行以下步骤：
-          1. 分析变更文件，判断需要哪些部署操作：
-             - 前端代码 (frontend/) → npm build + 重启前端服务
-             - 爬虫代码 (crawlers/) → 重启爬虫容器
-             - docker-compose.yml → docker compose up -d
-             - 数据库相关 → 运行迁移脚本
-             - Hasura metadata → hasura metadata apply
-             - 仅配置文件 → 可能只需重启服务
-
-          2. 执行必要的部署命令
-
-          3. 验证服务是否正常运行：
-             - 检查容器状态：docker compose ps
-             - 检查端口是否监听
-             - 简单的健康检查
-
-          4. 最后输出部署结果，格式：
-             DEPLOY_STATUS: SUCCESS 或 FAILED
-             DEPLOY_SUMMARY: 一句话总结
-             DEPLOY_DETAILS: 详细操作日志
-          "
-
-          echo "deploy_success=true" >> $GITHUB_OUTPUT
-
-      - name: Comment Success on PR
-        if: steps.analyze.outputs.need_deploy == 'true' && steps.deploy.outputs.deploy_success == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd /root/fuce
-          gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
-
-          ✅ **部署成功**
-
-          | 项目 | 信息 |
-          |------|------|
-          | 分支 | \`${{ github.ref_name }}\` |
-          | Commit | \`${{ github.sha }}\` |
-          | 测试地址 | http://46.224.5.136:18080 |
-
-          ---
-          请验证功能后 Merge 此 PR。"
-
-      - name: Comment Skip on PR
-        if: steps.analyze.outputs.need_deploy == 'false'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd /root/fuce
-          gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
-
-          ⏭️ **跳过部署**
-
-          原因：${{ steps.analyze.outputs.deploy_reason }}
-
-          ---
-          此 PR 不涉及需要部署的代码变更。"
-
-      - name: Comment Failure on PR
-        if: failure() && steps.analyze.outputs.need_deploy == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd /root/fuce
-          gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
-
-          ❌ **部署失败**
-
-          | 项目 | 信息 |
-          |------|------|
-          | 分支 | \`${{ github.ref_name }}\` |
-          | Commit | \`${{ github.sha }}\` |
-
-          请检查 [Action 日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 查看详细错误。"
+          echo "PR created successfully!"
