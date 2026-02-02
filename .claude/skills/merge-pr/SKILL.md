@@ -1,6 +1,6 @@
 ---
 name: merge-pr
-description: 合并 PR。合并后自动更新 backlog.json 任务状态为「待部署」。
+description: 合并 PR。合并前更新 backlog.json 任务状态为「待部署」，然后一起合并。
 ---
 
 # Merge PR
@@ -14,7 +14,7 @@ description: 合并 PR。合并后自动更新 backlog.json 任务状态为「�
 ### Step 1: 获取 PR 信息
 
 ```bash
-gh pr view <PR_NUMBER> --json baseRefName,body,title
+gh pr view <PR_NUMBER> --json baseRefName,body,title,headRefName
 ```
 
 从 PR body 提取 task ID：
@@ -45,30 +45,49 @@ gh pr diff <PR_NUMBER> | grep -iE '(password|secret|api_key|token)'
 gh pr checks <PR_NUMBER>
 ```
 
-### Step 4: 执行 Merge
+### Step 4: 更新 backlog.json（合并前）
+
+切换到 PR 分支，更新状态，提交并推送：
 
 ```bash
-gh pr merge <PR_NUMBER> --merge --delete-branch
+# 切换到 PR 分支
+gh pr checkout <PR_NUMBER>
 ```
-
-### Step 5: 更新 backlog.json
 
 ```python
 if task:
     task['status'] = 'deploying'  # testing → deploying
     task['merged_pr'] = pr_number
     save_backlog()
-    git_commit("chore: update backlog - task deploying")
 ```
 
-### Step 6: 输出
+```bash
+# 提交并推送
+git add docs/backlog.json
+git commit -m "chore: update backlog - task deploying"
+git push
+```
+
+### Step 5: 执行 Merge
+
+```bash
+gh pr merge <PR_NUMBER> --merge --delete-branch
+```
+
+### Step 6: 切换回 dev 分支
+
+```bash
+git checkout dev && git pull origin dev
+```
+
+### Step 7: 输出
 
 ```
 ✅ PR 合并完成！
 
 PR: #<number>
 任务: [<id>] <title>
-状态: testing → deploying
+状态: testing → deploying（已随 PR 合并）
 
 下一步：
 - 部署完成后: /backlog done <id>
