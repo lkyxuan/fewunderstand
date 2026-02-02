@@ -228,6 +228,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd /root/fuce
           gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
 
           ✅ **部署成功**
@@ -246,6 +247,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd /root/fuce
           gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
 
           ⏭️ **跳过部署**
@@ -260,6 +262,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd /root/fuce
           gh pr comment ${{ needs.create-pr.outputs.pr_number }} --body "## 🤖 测试网部署结果
 
           ❌ **部署失败**
