@@ -11,7 +11,7 @@
 - **THEN** 三块模块按纵向堆叠展示并可滚动查看
 
 ### Requirement: GraphQL 数据源
-系统 MUST 仅通过 Hasura GraphQL 查询/订阅获取 klines/indicators/signals 数据。
+系统 MUST 通过 Hasura GraphQL 查询/订阅获取 klines/indicators/signals 数据，用于自有 K 线图与右侧信息流。
 
 #### Scenario: 数据加载
 - **WHEN** 页面初始化加载
@@ -21,6 +21,13 @@
 - **WHEN** `signals` 表插入新记录
 - **THEN** GraphQL Subscription 推送并触发信息流更新
 
+### Requirement: TradingView 数据源
+系统 MUST 在 TradingView 插件中使用其内置行情数据源渲染专业图表。
+
+#### Scenario: 外部行情可用
+- **WHEN** TradingView 图表加载完成
+- **THEN** 图表数据由 TradingView 内置数据源提供，不依赖 GraphQL
+
 ### Requirement: TradingView 插件集成
 系统 MUST 在主图区域集成 TradingView 插件展示专业图表。
 
@@ -29,7 +36,7 @@
 - **THEN** TradingView 图表可交互（缩放/拖拽/时间轴）
 
 ### Requirement: Lightweight Charts K 线图
-系统 MUST 使用自有 K 线数据渲染 Lightweight Charts 图表，并支持插入自定义指标。
+系统 MUST 使用自有 K 线数据渲染 Lightweight Charts 图表，并在 MVP 中展示 `change_5min_pct` 指标线。
 
 #### Scenario: K 线数据渲染
 - **WHEN** 获取到 BTC/USDT 的 K 线数据
@@ -37,7 +44,7 @@
 
 #### Scenario: 自定义指标展示
 - **WHEN** 指标数据可用
-- **THEN** 指标以叠加或子图方式展示在轻量图表中
+- **THEN** `change_5min_pct` 以叠加或子图方式展示在轻量图表中
 
 ### Requirement: 交易对标识展示
 系统 MUST 在图表区域展示当前交易对标识（BTC/USDT）。
@@ -52,6 +59,17 @@
 #### Scenario: 新信号提醒
 - **WHEN** 有新信号到达
 - **THEN** 信息流出现新条目且该条目高亮至少 3 秒
+
+### Requirement: 信息流排序与去重
+系统 MUST 按时间倒序展示信号，并基于信号主键去重。
+
+#### Scenario: 时间倒序
+- **WHEN** 信息流渲染信号列表
+- **THEN** 最新信号显示在最上方
+
+#### Scenario: 去重
+- **WHEN** 订阅重复收到同一信号
+- **THEN** 列表中仅保留一条记录
 
 ### Requirement: 空状态与错误提示
 系统 MUST 在数据不可用或请求失败时提供可理解的空状态或错误提示。
